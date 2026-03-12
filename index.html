@@ -1,1 +1,28 @@
-<!DOCTYPE html>\n<html lang="he">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>שעון דיגיטלי</title>\n    <style>\n        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }\n        #clock { font-size: 48px; margin-bottom: 20px; }\n        #sunrise, #sunset { font-size: 24px; margin-top: 10px; }\n    </style>\n</head>\n<body>\n    <div id="clock"></div>\n    <div id="sunrise"></div>\n    <div id="sunset"></div>\n    <input type="time" id="timerInput">\n    <button id="startTimer">Start Timer</button>\n    <div id="timerDisplay"></div>\n    <script>\n        function updateClock() {\n            const now = new Date();\n            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };\n            document.getElementById('clock').innerHTML = now.toLocaleTimeString('en-US', options);\n        }\n        setInterval(updateClock, 1000);\n        function getSunTimes() {\n            // Placeholder for sunrise/sunset times. Replace with real data.\n            const sunriseTime = '06:30'; // Example sunrise time\n            const sunsetTime = '18:30'; // Example sunset time\n            document.getElementById('sunrise').innerHTML = `זריחה: ${sunriseTime}`;\n            document.getElementById('sunset').innerHTML = `שקיעה: ${sunsetTime}`;\n        }\n        getSunTimes();\n        document.getElementById('startTimer').addEventListener('click', function() {\n            const time = document.getElementById('timerInput').value;\n            const timer = time.split(':');\n            const totalSeconds = (parseInt(timer[0]) * 3600) + (parseInt(timer[1]) * 60);\n            let remaining = totalSeconds;\n            const timerInterval = setInterval(() => {\n                if (remaining <= 0) {\n                    clearInterval(timerInterval);\n                    document.getElementById('timerDisplay').innerHTML = 'טיימר נגמר!';\n                } else {\n                    remaining--;\n                    const hours = Math.floor(remaining / 3600);\n                    const minutes = Math.floor((remaining % 3600) / 60);\n                    const seconds = remaining % 60;\n                    document.getElementById('timerDisplay').innerHTML = `טיימר: ${hours}:${minutes}:${seconds}`;\n                }\n            }, 1000);\n        });\n    <\/script>\n</body>\n</html>
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>שעון דיגיטלי</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+    #clock { font-size: 48px; margin-bottom: 20px; }
+    .zman-row { font-size: 24px; margin-top: 10px; }
+    #zmanimStatus { color: #b00020; margin-top: 8px; }
+    #timerDisplay { margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div id="clock"></div>
+  <div id="sunrise" class="zman-row"></div>
+  <div id="sunset" class="zman-row"></div>
+  <div id="netzClean25km" class="zman-row"></div>
+  <div id="zmanimStatus"></div>
+
+  <input type="time" id="timerInput">
+  <button id="startTimer">Start Timer</button>
+  <div id="timerDisplay"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
