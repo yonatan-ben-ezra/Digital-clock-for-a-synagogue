@@ -1,102 +1,46 @@
-diff --git a/index.html b/index.html
-index 25958957bc36886edf8e0d2971787f289f5bd8e7..d55b6d7647ac4bc6d89bcbf8889f79e1ac9b2a1e 100644
---- a/index.html
-+++ b/index.html
-@@ -1,52 +1,45 @@
--diff --git a/index.html b/index.html
--index e3d93d3e30835d6ddfcb2f08ba0c13c7bc75a838..d55b6d7647ac4bc6d89bcbf8889f79e1ac9b2a1e 100644
----- a/index.html
--+++ b/index.html
--@@ -1 +1,45 @@
---<!DOCTYPE html>\n<html lang="he">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>שעון דיגיטלי</title>\n    <style>\n        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }\n        #clock { font-size: 48px; margin-bottom: 20px; }\n        #sunrise, #sunset { font-size: 24px; margin-top: 10px; }\n    </style>\n</head>\n<body>\n    <div id="clock"></div>\n    <div id="sunrise"></div>\n    <div id="sunset"></div>\n    <input type="time" id="timerInput">\n    <button id="startTimer">Start Timer</button>\n    <div id="timerDisplay"></div>\n    <script>\n        function updateClock() {\n            const now = new Date();\n            const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };\n            document.getElementById('clock').innerHTML = now.toLocaleTimeString('en-US', options);\n        }\n        setInterval(updateClock, 1000);\n        function getSunTimes() {\n            // Placeholder for sunrise/sunset times. Replace with real data.\n            const sunriseTime = '06:30'; // Example sunrise time\n            const sunsetTime = '18:30'; // Example sunset time\n            document.getElementById('sunrise').innerHTML = `זריחה: ${sunriseTime}`;\n            document.getElementById('sunset').innerHTML = `שקיעה: ${sunsetTime}`;\n        }\n        getSunTimes();\n        document.getElementById('startTimer').addEventListener('click', function() {\n            const time = document.getElementById('timerInput').value;\n            const timer = time.split(':');\n            const totalSeconds = (parseInt(timer[0]) * 3600) + (parseInt(timer[1]) * 60);\n            let remaining = totalSeconds;\n            const timerInterval = setInterval(() => {\n                if (remaining <= 0) {\n                    clearInterval(timerInterval);\n                    document.getElementById('timerDisplay').innerHTML = 'טיימר נגמר!';\n                } else {\n                    remaining--;\n                    const hours = Math.floor(remaining / 3600);\n                    const minutes = Math.floor((remaining % 3600) / 60);\n                    const seconds = remaining % 60;\n                    document.getElementById('timerDisplay').innerHTML = `טיימר: ${hours}:${minutes}:${seconds}`;\n                }\n            }, 1000);\n        });\n    <\/script>\n</body>\n</html>
--\ No newline at end of file
--+<!doctype html>
--+<html lang="he" dir="rtl">
--+<head>
--+  <meta charset="UTF-8" />
--+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
--+  <title>שעון דיגיטלי לבית הכנסת</title>
--+  <link rel="stylesheet" href="style.css" />
--+</head>
--+<body>
--+  <button id="openSettings" class="settings-btn" aria-label="הגדרות">⚙️</button>
--+
--+  <main class="clock-container">
--+    <h1 id="clock" class="clock">00:00:00</h1>
--+    <div id="gregorianDate" class="date-line"></div>
--+    <div id="hebrewDate" class="date-line"></div>
--+
--+    <div id="timerSection" class="timer-section hidden">
--+      <div id="timerCountdown" class="timer-countdown">00:00:00</div>
--+      <div id="netzLabel" class="netz-label"></div>
--+    </div>
--+
--+    <div id="sunrise" class="zman-line"></div>
--+    <div id="sunset" class="zman-line"></div>
--+
--+    <div id="status" class="status"></div>
--+  </main>
--+
--+  <dialog id="settingsDialog">
--+    <form id="settingsForm" method="dialog">
--+      <h2>הגדרות</h2>
--+      <label for="minutesBeforeNetz">כמה דקות לפני הנץ להציג טיימר</label>
--+      <input id="minutesBeforeNetz" name="minutesBeforeNetz" type="number" min="0" max="120" required />
--+
--+      <menu>
--+        <button value="cancel" type="button" id="cancelSettings">ביטול</button>
--+        <button value="default" type="button" id="resetSettings">איפוס</button>
--+        <button value="save" type="submit">שמירה</button>
--+      </menu>
--+    </form>
--+  </dialog>
--+
--+  <script src="config.js"></script>
--+  <script src="script.js"></script>
--+</body>
--+</html>
-+<!doctype html>
-+<html lang="he" dir="rtl">
-+<head>
-+  <meta charset="UTF-8" />
-+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-+  <title>שעון דיגיטלי לבית הכנסת</title>
-+  <link rel="stylesheet" href="style.css" />
-+</head>
-+<body>
-+  <button id="openSettings" class="settings-btn" aria-label="הגדרות">⚙️</button>
-+
-+  <main class="clock-container">
-+    <h1 id="clock" class="clock">00:00:00</h1>
-+    <div id="gregorianDate" class="date-line"></div>
-+    <div id="hebrewDate" class="date-line"></div>
-+
-+    <div id="timerSection" class="timer-section hidden">
-+      <div id="timerCountdown" class="timer-countdown">00:00:00</div>
-+      <div id="netzLabel" class="netz-label"></div>
-+    </div>
-+
-+    <div id="sunrise" class="zman-line"></div>
-+    <div id="sunset" class="zman-line"></div>
-+
-+    <div id="status" class="status"></div>
-+  </main>
-+
-+  <dialog id="settingsDialog">
-+    <form id="settingsForm" method="dialog">
-+      <h2>הגדרות</h2>
-+      <label for="minutesBeforeNetz">כמה דקות לפני הנץ להציג טיימר</label>
-+      <input id="minutesBeforeNetz" name="minutesBeforeNetz" type="number" min="0" max="120" required />
-+
-+      <menu>
-+        <button value="cancel" type="button" id="cancelSettings">ביטול</button>
-+        <button value="default" type="button" id="resetSettings">איפוס</button>
-+        <button value="save" type="submit">שמירה</button>
-+      </menu>
-+    </form>
-+  </dialog>
-+
-+  <script src="config.js"></script>
-+  <script src="script.js"></script>
-+</body>
-+</html>
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<title>שעון</title>
+
+<style>
+
+body{
+background:black;
+color:white;
+font-family:Arial;
+text-align:center;
+}
+
+#clock{
+font-size:120px;
+margin-top:150px;
+}
+
+#date{
+font-size:40px;
+margin-top:20px;
+}
+
+#zmanim{
+font-size:30px;
+margin-top:30px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="clock"></div>
+
+<div id="date"></div>
+
+<div id="zmanim"></div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
