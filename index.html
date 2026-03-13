@@ -1,46 +1,663 @@
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>שעון</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>שעון זמנים ותובנות</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #121212;
+            color: white;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
 
-<style>
+        .date-pill {
+            background-color: #242424;
+            border-radius: 9999px;
+            padding: 1.5vh 3vw;
+            font-size: min(4vw, 8vh);
+            font-weight: 500;
+            color: #d1d5db;
+            white-space: nowrap;
+        }
 
-body{
-background:black;
-color:white;
-font-family:Arial;
-text-align:center;
-}
+        .clock-display {
+            font-size: min(20vw, 45vh);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: 0.02em;
+        }
 
-#clock{
-font-size:120px;
-margin-top:150px;
-}
+        .zmanim-text {
+            font-size: min(7vw, 14vh);
+            font-weight: 700;
+        }
 
-#date{
-font-size:40px;
-margin-top:20px;
-}
+        .sunrise-color { color: #00E5FF; }
+        .sunset-color { color: #FF9800; }
+        .divider-color { color: #4B5563; }
+        .countdown-color { color: #4ADE80; } /* צבע ירוק לטיימר */
 
-#zmanim{
-font-size:30px;
-margin-top:30px;
-}
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+        .blink {
+            animation: blinker 1s linear infinite;
+        }
 
-</style>
+        /* Modal styling */
+        .modal-bg {
+            backdrop-filter: blur(8px);
+            background-color: rgba(0, 0, 0, 0.7);
+        }
 
+        /* Table scrollbar styling */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #4B5563;
+            border-radius: 4px;
+        }
+
+        /* Adjustments for smaller screens */
+        @media (max-width: 768px) {
+            .date-pill { font-size: min(6vw, 10vh); padding: 0.5rem 1.5rem; }
+            .clock-display { font-size: min(24vw, 35vh); }
+            .zmanim-text { font-size: min(9vw, 12vh); }
+            #zmanimNormal { flex-direction: column; gap: 0.5rem; }
+            .divider-color { display: none; }
+        }
+    </style>
 </head>
+<body class="h-screen w-screen flex flex-col justify-between p-6 md:p-10 relative">
 
-<body>
+    <!-- Top Bar: Settings, Refresh, Fullscreen, and Dates -->
+    <div class="relative w-full flex justify-center items-start">
+        <!-- Action Buttons -->
+        <div class="flex gap-4 z-10 absolute left-0 top-0 items-center">
+            <button id="fullscreenBtn" class="text-gray-400 hover:text-white transition-colors" title="מסך מלא">
+                <i data-lucide="maximize" class="w-8 h-8 md:w-10 md:h-10"></i>
+            </button>
+            <button id="openSettingsBtn" class="text-gray-400 hover:text-white transition-colors" title="הגדרות">
+                <i data-lucide="settings" class="w-8 h-8 md:w-10 md:h-10"></i>
+            </button>
+            <button id="refreshBtn" class="text-blue-400 hover:text-blue-300 transition-colors bg-blue-900/30 rounded-md p-1" title="רענן זמנים">
+                <i data-lucide="refresh-cw" class="w-6 h-6 md:w-8 md:h-8"></i>
+            </button>
+        </div>
 
-<div id="clock"></div>
+        <!-- Dates -->
+        <div class="flex flex-wrap justify-center gap-4 items-center mt-20 md:mt-2 w-full">
+            <div id="hebrewDate" class="date-pill">טוען...</div>
+            <div id="gregDate" class="date-pill">טוען...</div>
+        </div>
+    </div>
 
-<div id="date"></div>
+    <!-- Main Clock Container -->
+    <div class="flex flex-col items-center justify-center flex-grow">
+        <div id="clock" class="clock-display">00:00:00</div>
+    </div>
 
-<div id="zmanim"></div>
+    <!-- Zmanim Footer Container -->
+    <div class="flex flex-col items-center pb-4 md:pb-8">
+        
+        <!-- Normal Zmanim (Sunrise / Sunset) -->
+        <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
+            <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
+            <div class="divider-color">|</div>
+            <div class="sunset-color">שקיעה: <span id="sunsetTime">--:--</span></div>
+        </div>
 
-<script src="script.js"></script>
+        <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
+        <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
+            <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
+        </div>
 
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 flex justify-center items-center modal-bg py-4">
+        <div class="bg-[#1e1e1e] border border-gray-700 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl mx-4 flex flex-col max-h-full">
+            <h2 class="text-2xl font-bold mb-4 text-white flex items-center gap-2 flex-shrink-0">
+                <i data-lucide="settings" class="w-6 h-6"></i> הגדרות
+            </h2>
+            
+            <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
+                
+                <!-- Timer Settings -->
+                <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
+                    <label for="minutesInput" class="block text-gray-300 mb-2 font-medium">
+                        כמה דקות לפני הנץ להתחיל ספירה לאחור?
+                    </label>
+                    <input type="number" id="minutesInput" min="0" max="120" 
+                        class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-3 outline-none focus:border-blue-500 transition-colors"
+                        placeholder="הכנס דקות (לדוגמה 30)">
+                    <p class="text-sm text-gray-500 mt-2">הזן 0 כדי לבטל את הטיימר.</p>
+                </div>
+
+                <!-- Zmanim Table Editor -->
+                <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold mb-2 text-white">עריכת זמנים (חודש נוכחי והבא)</h3>
+                    <p class="text-sm text-gray-400 mb-4">
+                        ניתן לדייק ולערוך את זמני הזריחה והשקיעה באופן ידני. השינויים יישמרו אוטומטית במכשיר זה.
+                    </p>
+                    
+                    <div class="overflow-x-auto max-h-[40vh] custom-scrollbar border border-gray-700 rounded-lg bg-[#1e1e1e]">
+                        <table class="w-full text-right text-gray-300 relative">
+                            <thead class="sticky top-0 bg-[#242424] shadow-md z-10">
+                                <tr>
+                                    <th class="p-3 font-medium border-b border-gray-600">תאריך</th>
+                                    <th class="p-3 font-medium border-b border-gray-600 text-center">זריחה (כולל שניות)</th>
+                                    <th class="p-3 font-medium border-b border-gray-600 text-center">
+                                        <div class="flex flex-col items-center gap-1 justify-center">
+                                            <span>שקיעה</span>
+                                            <div class="flex items-center gap-1 text-sm bg-gray-700/50 rounded p-1 border border-gray-600">
+                                                <span>תוספת:</span>
+                                                <input type="number" id="sunsetOffsetInput" class="w-12 bg-[#1e1e1e] text-white border border-gray-500 rounded px-1 outline-none text-center h-6" value="0">
+                                                <span>דק'</span>
+                                            </div>
+                                        </div>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="zmanimTableBody">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6 flex-shrink-0">
+                <button id="closeSettingsBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-colors font-medium text-lg">
+                    סגור ושמור
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 text-white px-6 py-3 rounded-xl shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-3">
+        <i data-lucide="info" class="w-5 h-5 text-blue-400"></i>
+        <span id="toastMsg"></span>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // State Variables
+        let currentSunriseDate = null;
+        let currentSunsetDate = null;
+        let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
+        let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
+        let lastFetchedDateString = "";
+        let toastTimeout;
+
+        // Elements
+        const clockEl = document.getElementById('clock');
+        const gregDateEl = document.getElementById('gregDate');
+        const hebrewDateEl = document.getElementById('hebrewDate');
+        const sunriseTimeEl = document.getElementById('sunriseTime');
+        const sunsetTimeEl = document.getElementById('sunsetTime');
+        
+        const zmanimNormalEl = document.getElementById('zmanimNormal');
+        const zmanimCountdownEl = document.getElementById('zmanimCountdown');
+        const netzTimeDisplayEl = document.getElementById('netzTimeDisplay');
+
+        // Modal Elements
+        const modal = document.getElementById('settingsModal');
+        const minutesInput = document.getElementById('minutesInput');
+        const sunsetOffsetInput = document.getElementById('sunsetOffsetInput');
+        
+        // Toast Elements
+        const toastEl = document.getElementById('toast');
+        const toastMsgEl = document.getElementById('toastMsg');
+
+        function showToast(message) {
+            toastMsgEl.innerText = message;
+            toastEl.classList.remove('opacity-0');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toastEl.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        // --- Helper Functions for Dates ---
+
+        function formatDate(d) {
+            return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0') + "-" + String(d.getDate()).padStart(2, '0');
+        }
+
+        function formatTimeToInput(dateObj) {
+            if (!dateObj) return "";
+            let d = new Date(dateObj);
+            const h = String(d.getHours()).padStart(2, '0');
+            const m = String(d.getMinutes()).padStart(2, '0');
+            const s = String(d.getSeconds()).padStart(2, '0');
+            return `${h}:${m}:${s}`;
+        }
+
+        // Get Hebrew day reliably
+        function getHebrewDayInt(d) {
+            const parts = new Intl.DateTimeFormat('en-US-u-ca-hebrew', { day: 'numeric' }).formatToParts(d);
+            const dayPart = parts.find(p => p.type === 'day');
+            return dayPart ? parseInt(dayPart.value) : d.getDate();
+        }
+
+        // Get Hebrew month string reliably to detect changes
+        function getHebrewMonthYearStr(d) {
+            return new Intl.DateTimeFormat('en-US-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(d);
+        }
+
+        // Returns Hebrew string (e.g. "א׳ תשרי")
+        function getHebrewDateString(d) {
+            const formatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' });
+            return formatter.format(d).replace(/[\u0591-\u05C7]/g, ''); // Remove niqqud
+        }
+
+        // Determine range: Start of current Hebrew month to End of next Hebrew month
+        function getHebrewMonthsRange() {
+            const dates = [];
+            const today = new Date();
+            let iter = new Date(today);
+            
+            // Go back to day 1 of the current Hebrew month (safety limit 40 days)
+            let fallbackCounter = 0;
+            while (getHebrewDayInt(iter) !== 1 && fallbackCounter < 40) {
+                iter.setDate(iter.getDate() - 1);
+                fallbackCounter++;
+            }
+
+            // Collect dates until the month changes twice
+            let monthChanges = 0;
+            let lastMonth = getHebrewMonthYearStr(iter);
+
+            while (monthChanges < 2 && dates.length < 65) { 
+                dates.push(new Date(iter));
+                iter.setDate(iter.getDate() + 1);
+                
+                let currentMonth = getHebrewMonthYearStr(iter);
+                if (currentMonth !== lastMonth) {
+                    monthChanges++;
+                    lastMonth = currentMonth;
+                }
+            }
+            return dates;
+        }
+        
+        // --- API and Main Data Fetching ---
+
+        async function fetchDatesAndZmanim() {
+            try {
+                const now = new Date();
+                const todayStr = formatDate(now);
+                lastFetchedDateString = todayStr;
+
+                // 1. Fetch Zmanim (Jerusalem)
+                const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=281184&sec=1&date=${todayStr}`);
+                const zmanimData = await zmanimRes.json();
+                
+                let baseSunrise = new Date(zmanimData.times.sunrise);
+                let baseSunset = new Date(zmanimData.times.sunset);
+
+                // Apply global sunset offset
+                if (globalSunsetOffset) {
+                    baseSunset.setMinutes(baseSunset.getMinutes() + globalSunsetOffset);
+                }
+
+                // Check for User Custom Overrides
+                const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+                if (customZmanim[todayStr]) {
+                    if (customZmanim[todayStr].sunrise) {
+                        const [h, m, s] = customZmanim[todayStr].sunrise.split(':');
+                        baseSunrise = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+                    }
+                    if (customZmanim[todayStr].sunset) {
+                        const [h, m, s] = customZmanim[todayStr].sunset.split(':');
+                        baseSunset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+                    }
+                }
+
+                currentSunriseDate = baseSunrise;
+                currentSunsetDate = baseSunset;
+
+                // Update Zmanim UI
+                sunriseTimeEl.innerText = formatTimeHM(currentSunriseDate);
+                sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
+                netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
+
+                // 2. Fetch Hebrew Date
+                const hebDateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`);
+                const hebDateData = await hebDateRes.json();
+                
+                const cleanHebrew = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+                const weekdays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+                const weekdayName = "יום " + weekdays[now.getDay()];
+
+                hebrewDateEl.innerText = `${weekdayName}, ${cleanHebrew}`;
+                gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+
+            } catch (err) {
+                console.error("Error fetching data:", err);
+            }
+        }
+
+        // --- Clock and Timer Logic ---
+
+        function updateClock() {
+            const now = new Date();
+
+            const todayStr = formatDate(now);
+            if (todayStr !== lastFetchedDateString) {
+                fetchDatesAndZmanim();
+            }
+
+            if (currentSunriseDate && countdownMinutes > 0) {
+                const diffMs = currentSunriseDate.getTime() - now.getTime();
+                const diffSeconds = diffMs / 1000;
+                const diffMinutes = diffSeconds / 60;
+
+                // הבהוב על 00:00 למשך 10 שניות לאחר הגעה לאפס
+                if (diffSeconds <= 0 && diffSeconds > -10) {
+                    clockEl.innerText = "00:00";
+                    clockEl.classList.add('countdown-color', 'blink');
+                    clockEl.classList.remove('sunrise-color');
+                    
+                    zmanimNormalEl.classList.add('hidden');
+                    zmanimCountdownEl.classList.remove('hidden');
+                    return;
+                }
+
+                // טיימר ספירה לאחור (לפני הנץ)
+                if (diffMinutes > 0 && diffMinutes <= countdownMinutes) {
+                    clockEl.innerText = formatDiffToHMS(diffMs);
+                    clockEl.classList.add('countdown-color');
+                    clockEl.classList.remove('blink', 'sunrise-color');
+                    
+                    zmanimNormalEl.classList.add('hidden');
+                    zmanimCountdownEl.classList.remove('hidden');
+                    return; 
+                }
+            }
+
+            // שעון רגיל
+            clockEl.innerText = formatTimeHMS(now);
+            clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
+            
+            zmanimNormalEl.classList.remove('hidden');
+            zmanimCountdownEl.classList.add('hidden');
+        }
+
+        function formatTimeHMS(dateObj) {
+            return String(dateObj.getHours()).padStart(2, '0') + ":" + 
+                   String(dateObj.getMinutes()).padStart(2, '0') + ":" + 
+                   String(dateObj.getSeconds()).padStart(2, '0');
+        }
+
+        function formatTimeHM(dateObj) {
+            return String(dateObj.getHours()).padStart(2, '0') + ":" + 
+                   String(dateObj.getMinutes()).padStart(2, '0');
+        }
+
+        function formatDiffToHMS(ms) {
+            const totalSeconds = Math.floor(ms / 1000);
+            const h = Math.floor(totalSeconds / 3600);
+            const m = Math.floor((totalSeconds % 3600) / 60);
+            const s = totalSeconds % 60;
+
+            if (h > 0) {
+                return String(h).padStart(2, '0') + ":" + String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+            } else {
+                return String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+            }
+        }
+
+        // --- Table Rendering Logic ---
+
+        async function loadTableData() {
+            const tableBody = document.getElementById('zmanimTableBody');
+            
+            const dates = getHebrewMonthsRange();
+            const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+            const cachedZmanim = JSON.parse(localStorage.getItem('baseZmanimCache') || '{}');
+
+            // Render existing cached or custom data immediately
+            renderTable(dates, cachedZmanim, customZmanim);
+
+            // Fetch any missing base zmanim data in chunks
+            const missingDates = dates.filter(d => !cachedZmanim[formatDate(d)]);
+            
+            if (missingDates.length > 0) {
+                // Add loading row
+                tableBody.insertAdjacentHTML('afterbegin', '<tr id="loadingRow"><td colspan="3" class="text-center p-4 text-blue-400 font-bold">טוען זמנים חסרים (מתעדכן אוטומטית)...</td></tr>');
+                
+                for (let i = 0; i < missingDates.length; i += 3) {
+                    const batch = missingDates.slice(i, i + 3);
+                    await Promise.all(batch.map(async (d) => {
+                        const str = formatDate(d);
+                        try {
+                            const res = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=281184&sec=1&date=${str}`);
+                            if (res.ok) {
+                                const data = await res.json();
+                                cachedZmanim[str] = {
+                                    sunrise: data.times.sunrise,
+                                    sunset: data.times.sunset
+                                };
+                            }
+                        } catch (e) {
+                            console.error("Error fetching date", str);
+                        }
+                    }));
+                    
+                    localStorage.setItem('baseZmanimCache', JSON.stringify(cachedZmanim));
+                    renderTable(dates, cachedZmanim, customZmanim); // Re-render with new data
+                    
+                    // Small delay to prevent API rate-limiting
+                    await new Promise(r => setTimeout(r, 250));
+                }
+            }
+        }
+
+        function renderTable(dates, cached, custom) {
+            const tableBody = document.getElementById('zmanimTableBody');
+            tableBody.innerHTML = '';
+            
+            dates.forEach(d => {
+                const str = formatDate(d);
+                const hebStr = getHebrewDateString(d);
+
+                let sunriseVal = custom[str]?.sunrise || "";
+                let sunsetVal = custom[str]?.sunset || "";
+
+                const hasCustomSunrise = !!custom[str]?.sunrise;
+                const hasCustomSunset = !!custom[str]?.sunset;
+
+                if (!sunriseVal && cached[str]) {
+                    sunriseVal = formatTimeToInput(new Date(cached[str].sunrise));
+                }
+                if (!sunsetVal && cached[str]) {
+                    let sDate = new Date(cached[str].sunset);
+                    if (globalSunsetOffset) {
+                        sDate.setMinutes(sDate.getMinutes() + globalSunsetOffset);
+                    }
+                    sunsetVal = formatTimeToInput(sDate);
+                }
+
+                // Highlight today's row
+                const isToday = str === lastFetchedDateString;
+                const rowClass = isToday ? "bg-blue-900/20" : "hover:bg-[#242424]";
+
+                const tr = document.createElement('tr');
+                tr.className = `border-b border-gray-700 transition-colors ${rowClass}`;
+                tr.innerHTML = `
+                    <td class="p-3 text-sm whitespace-nowrap font-medium ${isToday ? 'text-blue-300' : ''}">${hebStr} ${isToday ? '(היום)' : ''}</td>
+                    <td class="p-2">
+                        <div class="flex items-center justify-center gap-2">
+                            <input type="time" step="1" data-date="${str}" data-type="sunrise" value="${sunriseVal}"
+                                   class="bg-[#1e1e1e] text-white border ${hasCustomSunrise ? 'border-yellow-500 text-yellow-300' : 'border-gray-600'} rounded p-1.5 w-full text-center focus:border-blue-500 outline-none transition-colors">
+                            <button class="undo-btn text-gray-400 hover:text-red-400 transition-colors ${hasCustomSunrise ? '' : 'invisible'}" data-date="${str}" data-type="sunrise" title="החזר לברירת מחדל">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                    <td class="p-2">
+                        <div class="flex items-center justify-center gap-2">
+                            <input type="time" step="1" data-date="${str}" data-type="sunset" value="${sunsetVal}"
+                                   class="bg-[#1e1e1e] text-white border ${hasCustomSunset ? 'border-yellow-500 text-yellow-300' : 'border-gray-600'} rounded p-1.5 w-full text-center focus:border-blue-500 outline-none transition-colors">
+                            <button class="undo-btn text-gray-400 hover:text-red-400 transition-colors ${hasCustomSunset ? '' : 'invisible'}" data-date="${str}" data-type="sunset" title="החזר לברירת מחדל">
+                                <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+
+            // Initialize icons for the new undo buttons
+            lucide.createIcons();
+
+            // Listen to edits
+            tableBody.querySelectorAll('input[type="time"]').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const dateStr = e.target.getAttribute('data-date');
+                    const type = e.target.getAttribute('data-type');
+                    const val = e.target.value;
+
+                    let currentCustom = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+                    if (!currentCustom[dateStr]) currentCustom[dateStr] = {};
+
+                    if (val) {
+                        currentCustom[dateStr][type] = val;
+                    } else {
+                        delete currentCustom[dateStr][type];
+                    }
+                    
+                    if (Object.keys(currentCustom[dateStr]).length === 0) delete currentCustom[dateStr];
+
+                    localStorage.setItem('customZmanim', JSON.stringify(currentCustom));
+                    
+                    // Force refresh main clock if today was edited
+                    if (dateStr === lastFetchedDateString) {
+                        fetchDatesAndZmanim();
+                    }
+                    
+                    // Re-render table to show yellow border and undo button
+                    loadTableData();
+                });
+            });
+
+            // Listen to Undo buttons
+            tableBody.querySelectorAll('.undo-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const button = e.currentTarget;
+                    const dateStr = button.getAttribute('data-date');
+                    const type = button.getAttribute('data-type');
+                    
+                    let currentCustom = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+                    if (currentCustom[dateStr] && currentCustom[dateStr][type]) {
+                        delete currentCustom[dateStr][type];
+                        if (Object.keys(currentCustom[dateStr]).length === 0) delete currentCustom[dateStr];
+                        
+                        localStorage.setItem('customZmanim', JSON.stringify(currentCustom));
+                        
+                        loadTableData();
+                        if (dateStr === lastFetchedDateString) fetchDatesAndZmanim();
+                    }
+                });
+            });
+        }
+
+        // --- Modal & Settings Logic ---
+
+        // Offset input listener
+        sunsetOffsetInput.value = globalSunsetOffset;
+        sunsetOffsetInput.addEventListener('change', (e) => {
+            let val = parseInt(e.target.value);
+            if (isNaN(val)) val = 0;
+            globalSunsetOffset = val;
+            localStorage.setItem('sunsetOffsetMinutes', globalSunsetOffset);
+            
+            // Re-render table and update clock
+            loadTableData(); 
+            fetchDatesAndZmanim();
+        });
+
+        document.getElementById('openSettingsBtn').addEventListener('click', () => {
+            minutesInput.value = countdownMinutes;
+            modal.classList.remove('hidden');
+            loadTableData(); // Trigger loading and rendering table
+        });
+
+        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
+            // Save Timer
+            let val = parseInt(minutesInput.value);
+            if (isNaN(val) || val < 0) val = 0;
+            
+            countdownMinutes = val;
+            localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+            
+            modal.classList.add('hidden');
+            updateClock(); 
+            showToast("ההגדרות נשמרו בהצלחה!");
+        });
+
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            fetchDatesAndZmanim();
+            showToast("מרענן נתונים...");
+        });
+
+        // Fullscreen Logic
+        document.getElementById('fullscreenBtn').addEventListener('click', () => {
+            if (!document.fullscreenEnabled) {
+                showToast("מצב מסך מלא חסום בסביבה זו.");
+                return;
+            }
+
+            if (!document.fullscreenElement) {
+                const elem = document.documentElement;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {
+                        console.warn(`Fullscreen error: ${err.message}`);
+                        showToast("הדפדפן חוסם הפעלת מסך מלא.");
+                    });
+                } else {
+                    showToast("מסך מלא אינו נתמך בדפדפן זה.");
+                }
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        // --- Initialization ---
+
+        fetchDatesAndZmanim();
+        setInterval(updateClock, 1000);
+        updateClock(); 
+
+    </script>
 </body>
 </html>
