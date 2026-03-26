@@ -85,6 +85,7 @@
             .zmanim-text { font-size: min(9vw, 12vh); }
             #zmanimNormal { flex-direction: column; gap: 0.5rem; }
             .divider-color { display: none; }
+            #weatherWidget { bottom: 1rem; left: 1rem; }
         }
     </style>
 </head>
@@ -113,8 +114,8 @@
     </div>
 
     <!-- Main Clock Container -->
-    <div class="flex flex-col items-center justify-center flex-grow">
-        <div id="clock" class="clock-display">00:00:00</div>
+    <div class="flex flex-col items-center justify-center flex-grow relative">
+        <div id="clock" class="clock-display transition-opacity duration-500">00:00:00</div>
     </div>
 
     <!-- Zmanim Footer Container -->
@@ -127,11 +128,33 @@
             <div class="sunset-color">שקיעה: <span id="sunsetTime">--:--</span></div>
         </div>
 
+        <!-- Shabbat / Holiday Times (Only shown on relevant days) -->
+        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400" style="font-size: min(5vw, 10vh); font-weight: 700;">
+        </div>
+
         <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
         <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
             <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
         </div>
 
+    </div>
+
+    <!-- Scheduled Announcement Overlay -->
+    <div id="announcementOverlay" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex-col items-center justify-center p-10 text-center transition-opacity duration-500">
+        <div class="animate-bounce mb-6">
+            <i data-lucide="bell-ring" class="w-20 h-20 text-yellow-400"></i>
+        </div>
+        <div id="announcementTextDisplay" class="text-yellow-400 font-black leading-tight" style="font-size: min(12vw, 20vh); text-shadow: 0 10px 30px rgba(0,0,0,1);">
+            <!-- הטקסט יוזרק לכאן -->
+        </div>
+    </div>
+
+    <!-- Weather Widget (Bottom Left) -->
+    <div id="weatherWidget" class="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex items-center gap-3 bg-[#242424]/80 backdrop-blur-md border border-gray-700/50 p-3 rounded-2xl shadow-lg opacity-0 transition-opacity duration-1000">
+        <div id="weatherIconContainer">
+            <!-- Icon injected by JS -->
+        </div>
+        <div id="weatherTemp" class="text-xl md:text-3xl font-bold text-gray-200" dir="ltr">--°C</div>
     </div>
 
     <!-- Settings Modal -->
@@ -154,12 +177,35 @@
                     <p class="text-sm text-gray-500 mt-2">הזן 0 כדי לבטל את הטיימר.</p>
                 </div>
 
+                <!-- Scheduled Announcement Settings -->
+                <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2">
+                        <i data-lucide="megaphone" class="w-5 h-5 text-yellow-400"></i> הודעה מתוזמנת למסך
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="md:col-span-2">
+                            <label class="block text-gray-300 mb-1 text-sm">תוכן ההודעה:</label>
+                            <input type="text" id="announcementTextInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: יעלה ויבוא / נא לכבות פלאפונים">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1 text-sm">שעת תצוגה (כולל שניות):</label>
+                            <input type="time" step="1" id="announcementTimeInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
+                        </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1 text-sm">משך תצוגה (בשניות):</label>
+                            <input type="number" id="announcementDurationInput" min="0" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: 60">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Zmanim Table Editor -->
-                <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
-                    <h3 class="text-xl font-bold mb-2 text-white">עריכת זמנים (חודש נוכחי והבא)</h3>
-                    <p class="text-sm text-gray-400 mb-4">
-                        ניתן לדייק ולערוך את זמני הזריחה והשקיעה באופן ידני. השינויים יישמרו אוטומטית במכשיר זה.
-                    </p>
+                <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700 relative">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                        <div>
+                            <h3 class="text-xl font-bold text-white">עריכת זמנים (חודש נוכחי והבא)</h3>
+                            <p class="text-sm text-gray-400">השינויים נשמרים מקומית. ניתן לקזז את השקיעה להלן.</p>
+                        </div>
+                    </div>
                     
                     <div class="overflow-x-auto max-h-[40vh] custom-scrollbar border border-gray-700 rounded-lg bg-[#1e1e1e]">
                         <table class="w-full text-right text-gray-300 relative">
@@ -203,17 +249,150 @@
     </div>
 
     <!-- Scripts -->
-    <script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // Initialize Icons
         lucide.createIcons();
+
+        // --- Firebase Cloud Sync Setup ---
+        const firebaseConfig = {
+          apiKey: "AIzaSyDz01G5FSV3qbnsfhAS5j8n-zMsY_2NyQ0",
+          authDomain: "synagogueclock.firebaseapp.com",
+          projectId: "synagogueclock",
+          storageBucket: "synagogueclock.firebasestorage.app",
+          messagingSenderId: "833992508561",
+          appId: "1:833992508561:web:d0219a737da7ca61cfab30",
+          measurementId: "G-Y2YCGSFXXC"
+        };
+        
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'my-synagogue-clock';
+        let cloudUser = null;
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (e) {
+                console.error("Cloud Auth Error:", e);
+            }
+        }
+        initAuth();
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                cloudUser = user;
+                setupCloudSync();
+            }
+        });
+
+        function setupCloudSync() {
+            if (!cloudUser) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            
+            onSnapshot(docRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.data();
+                    let needsRefresh = false;
+
+                    if (data.countdownMinutes !== undefined && data.countdownMinutes !== countdownMinutes) {
+                        countdownMinutes = data.countdownMinutes;
+                        localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+                        needsRefresh = true;
+                    }
+                    if (data.globalSunsetOffset !== undefined && data.globalSunsetOffset !== globalSunsetOffset) {
+                        globalSunsetOffset = data.globalSunsetOffset;
+                        localStorage.setItem('sunsetOffsetMinutes', globalSunsetOffset);
+                        if (document.getElementById('sunsetOffsetInput')) {
+                            document.getElementById('sunsetOffsetInput').value = globalSunsetOffset;
+                        }
+                        needsRefresh = true;
+                    }
+                    if (data.announcementText !== undefined && data.announcementText !== announcementText) {
+                        announcementText = data.announcementText;
+                        localStorage.setItem('announcementText', announcementText);
+                        needsRefresh = true;
+                    }
+                    if (data.announcementTime !== undefined && data.announcementTime !== announcementTime) {
+                        announcementTime = data.announcementTime;
+                        localStorage.setItem('announcementTime', announcementTime);
+                        needsRefresh = true;
+                    }
+                    if (data.announcementDuration !== undefined && data.announcementDuration !== announcementDuration) {
+                        announcementDuration = data.announcementDuration;
+                        localStorage.setItem('announcementDuration', announcementDuration);
+                        needsRefresh = true;
+                    }
+
+                    if (data.customZmanim) {
+                        const currentLocal = localStorage.getItem('customZmanim');
+                        const cloudDataStr = JSON.stringify(data.customZmanim);
+                        if (currentLocal !== cloudDataStr) {
+                            localStorage.setItem('customZmanim', cloudDataStr);
+                            needsRefresh = true;
+                        }
+                    }
+
+                    if (needsRefresh) {
+                        fetchDatesAndZmanim();
+                        const modal = document.getElementById('settingsModal');
+                        if (modal && !modal.classList.contains('hidden')) {
+                            loadTableData();
+                            // עדכון השדות של ההודעה במודל אם פתוח
+                            document.getElementById('announcementTextInput').value = announcementText;
+                            document.getElementById('announcementTimeInput').value = announcementTime;
+                            document.getElementById('announcementDurationInput').value = announcementDuration || "";
+                        }
+                        showToast("הנתונים סונכרנו מהענן!");
+                        updateClock(); // בדיקה מיידית האם צריך להציג את ההודעה
+                    }
+                }
+            }, (error) => {
+                console.error("Sync listener error:", error);
+            });
+        }
+
+        async function syncToCloud() {
+            if (!cloudUser) return;
+            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+            try {
+                await setDoc(docRef, {
+                    countdownMinutes: countdownMinutes,
+                    globalSunsetOffset: globalSunsetOffset,
+                    announcementText: announcementText,
+                    announcementTime: announcementTime,
+                    announcementDuration: announcementDuration,
+                    customZmanim: customZmanim,
+                    lastUpdated: new Date().toISOString()
+                }, { merge: true });
+            } catch (e) {
+                console.error("Cloud Save Error:", e);
+            }
+        }
 
         // State Variables
         let currentSunriseDate = null;
         let currentSunsetDate = null;
         let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
+        
+        // Announcement Variables
+        let announcementText = localStorage.getItem('announcementText') || '';
+        let announcementTime = localStorage.getItem('announcementTime') || '';
+        let announcementDuration = parseInt(localStorage.getItem('announcementDuration')) || 0;
+
         let lastFetchedDateString = "";
         let toastTimeout;
+        let hasShabbatTimes = false;
 
         // Elements
         const clockEl = document.getElementById('clock');
@@ -225,11 +404,19 @@
         const zmanimNormalEl = document.getElementById('zmanimNormal');
         const zmanimCountdownEl = document.getElementById('zmanimCountdown');
         const netzTimeDisplayEl = document.getElementById('netzTimeDisplay');
+        const shabbatTimesEl = document.getElementById('shabbatTimes');
+
+        const announcementOverlay = document.getElementById('announcementOverlay');
+        const announcementTextDisplay = document.getElementById('announcementTextDisplay');
 
         // Modal Elements
         const modal = document.getElementById('settingsModal');
         const minutesInput = document.getElementById('minutesInput');
         const sunsetOffsetInput = document.getElementById('sunsetOffsetInput');
+        
+        const announcementTextInput = document.getElementById('announcementTextInput');
+        const announcementTimeInput = document.getElementById('announcementTimeInput');
+        const announcementDurationInput = document.getElementById('announcementDurationInput');
         
         // Toast Elements
         const toastEl = document.getElementById('toast');
@@ -259,38 +446,32 @@
             return `${h}:${m}:${s}`;
         }
 
-        // Get Hebrew day reliably
         function getHebrewDayInt(d) {
             const parts = new Intl.DateTimeFormat('en-US-u-ca-hebrew', { day: 'numeric' }).formatToParts(d);
             const dayPart = parts.find(p => p.type === 'day');
             return dayPart ? parseInt(dayPart.value) : d.getDate();
         }
 
-        // Get Hebrew month string reliably to detect changes
         function getHebrewMonthYearStr(d) {
             return new Intl.DateTimeFormat('en-US-u-ca-hebrew', { month: 'long', year: 'numeric' }).format(d);
         }
 
-        // Returns Hebrew string (e.g. "א׳ תשרי")
         function getHebrewDateString(d) {
             const formatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' });
-            return formatter.format(d).replace(/[\u0591-\u05C7]/g, ''); // Remove niqqud
+            return formatter.format(d).replace(/[\u0591-\u05C7]/g, ''); 
         }
 
-        // Determine range: Start of current Hebrew month to End of next Hebrew month
         function getHebrewMonthsRange() {
             const dates = [];
             const today = new Date();
             let iter = new Date(today);
             
-            // Go back to day 1 of the current Hebrew month (safety limit 40 days)
             let fallbackCounter = 0;
             while (getHebrewDayInt(iter) !== 1 && fallbackCounter < 40) {
                 iter.setDate(iter.getDate() - 1);
                 fallbackCounter++;
             }
 
-            // Collect dates until the month changes twice
             let monthChanges = 0;
             let lastMonth = getHebrewMonthYearStr(iter);
 
@@ -306,6 +487,55 @@
             }
             return dates;
         }
+
+        // --- Weather Logic ---
+
+        function getWeatherIcon(wmoCode, isDay) {
+            if (wmoCode === 0) return isDay ? 'sun' : 'moon'; 
+            if (wmoCode === 1 || wmoCode === 2) return isDay ? 'cloud-sun' : 'cloud-moon'; 
+            if (wmoCode === 3) return 'cloud'; 
+            if (wmoCode >= 45 && wmoCode <= 48) return 'cloud-fog'; 
+            if (wmoCode >= 51 && wmoCode <= 57) return 'cloud-drizzle'; 
+            if (wmoCode >= 61 && wmoCode <= 67) return 'cloud-rain'; 
+            if (wmoCode >= 71 && wmoCode <= 77) return 'snowflake'; 
+            if (wmoCode >= 80 && wmoCode <= 82) return 'cloud-rain'; 
+            if (wmoCode >= 85 && wmoCode <= 86) return 'snowflake'; 
+            if (wmoCode >= 95) return 'cloud-lightning'; 
+            return 'cloud'; 
+        }
+
+        async function fetchWeather() {
+            try {
+                const lat = 31.769;
+                const lon = 35.2163;
+                
+                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
+                const data = await res.json();
+                
+                if (data && data.current_weather) {
+                    const temp = Math.round(data.current_weather.temperature);
+                    const code = data.current_weather.weathercode;
+                    const isDay = data.current_weather.is_day;
+                    
+                    const iconName = getWeatherIcon(code, isDay);
+                    let colorClass = 'text-gray-300';
+                    
+                    if (isDay && code <= 2) colorClass = 'text-yellow-400';
+                    else if (code >= 50 && code <= 67) colorClass = 'text-blue-400';
+                    else if (code >= 95) colorClass = 'text-purple-400';
+                    
+                    document.getElementById('weatherTemp').innerText = `${temp}°C`;
+                    
+                    const iconContainer = document.getElementById('weatherIconContainer');
+                    iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 md:w-10 md:h-10 ${colorClass}"></i>`;
+                    lucide.createIcons(); 
+                    
+                    document.getElementById('weatherWidget').classList.remove('opacity-0');
+                }
+            } catch (e) {
+                console.error("Error fetching weather:", e);
+            }
+        }
         
         // --- API and Main Data Fetching ---
 
@@ -315,19 +545,16 @@
                 const todayStr = formatDate(now);
                 lastFetchedDateString = todayStr;
 
-                // 1. Fetch Zmanim (Jerusalem)
                 const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=281184&sec=1&date=${todayStr}`);
                 const zmanimData = await zmanimRes.json();
                 
                 let baseSunrise = new Date(zmanimData.times.sunrise);
                 let baseSunset = new Date(zmanimData.times.sunset);
 
-                // Apply global sunset offset
                 if (globalSunsetOffset) {
                     baseSunset.setMinutes(baseSunset.getMinutes() + globalSunsetOffset);
                 }
 
-                // Check for User Custom Overrides
                 const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
                 if (customZmanim[todayStr]) {
                     if (customZmanim[todayStr].sunrise) {
@@ -343,12 +570,10 @@
                 currentSunriseDate = baseSunrise;
                 currentSunsetDate = baseSunset;
 
-                // Update Zmanim UI
                 sunriseTimeEl.innerText = formatTimeHM(currentSunriseDate);
                 sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
                 netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
 
-                // 2. Fetch Hebrew Date
                 const hebDateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`);
                 const hebDateData = await hebDateRes.json();
                 
@@ -359,12 +584,62 @@
                 hebrewDateEl.innerText = `${weekdayName}, ${cleanHebrew}`;
                 gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
+                try {
+                    const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=281184`);
+                    if (shabbatRes.ok) {
+                        const shabbatData = await shabbatRes.json();
+                        let shabbatCandles = null;
+                        let shabbatHavdalah = null;
+
+                        if (shabbatData && shabbatData.items) {
+                            for (const item of shabbatData.items) {
+                                if (!item.date) continue;
+                                const itemDate = item.date.split('T')[0];
+                                if (itemDate === todayStr) {
+                                    if (item.category === 'candles') {
+                                        shabbatCandles = new Date(item.date);
+                                        if (globalSunsetOffset) {
+                                            shabbatCandles.setMinutes(shabbatCandles.getMinutes() + globalSunsetOffset);
+                                        }
+                                    } else if (item.category === 'havdalah') {
+                                        shabbatHavdalah = new Date(item.date);
+                                        if (globalSunsetOffset) {
+                                            shabbatHavdalah.setMinutes(shabbatHavdalah.getMinutes() + globalSunsetOffset);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        hasShabbatTimes = !!(shabbatCandles || shabbatHavdalah);
+                        if (hasShabbatTimes) {
+                            let html = '';
+                            if (shabbatCandles) {
+                                html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
+                            }
+                            if (shabbatHavdalah) {
+                                if (shabbatCandles) html += `<div class="divider-color mx-4">|</div>`;
+                                html += `<div>צאת שבת/חג: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
+                            }
+                            shabbatTimesEl.innerHTML = html;
+                            shabbatTimesEl.classList.remove('hidden');
+                            shabbatTimesEl.classList.add('flex');
+                        } else {
+                            shabbatTimesEl.classList.add('hidden');
+                            shabbatTimesEl.classList.remove('flex');
+                            shabbatTimesEl.innerHTML = '';
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error fetching Shabbat times:", e);
+                }
+
             } catch (err) {
                 console.error("Error fetching data:", err);
             }
         }
 
-        // --- Clock and Timer Logic ---
+        // --- Clock, Timer and Announcement Logic ---
 
         function updateClock() {
             const now = new Date();
@@ -374,12 +649,32 @@
                 fetchDatesAndZmanim();
             }
 
+            // -- Check for Scheduled Announcement --
+            if (announcementText && announcementTime && announcementDuration > 0) {
+                const [aHour, aMin, aSec] = announcementTime.split(':').map(Number);
+                const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
+                const aEnd = new Date(aStart.getTime() + announcementDuration * 1000); // מוסיפים את השניות
+                
+                // אם הזמן הנוכחי נופל בדיוק בתוך הטווח המתוזמן
+                if (now >= aStart && now < aEnd) {
+                    announcementTextDisplay.innerText = announcementText;
+                    announcementOverlay.classList.remove('hidden');
+                    announcementOverlay.classList.add('flex');
+                } else {
+                    announcementOverlay.classList.add('hidden');
+                    announcementOverlay.classList.remove('flex');
+                }
+            } else {
+                announcementOverlay.classList.add('hidden');
+                announcementOverlay.classList.remove('flex');
+            }
+            // --------------------------------------
+
             if (currentSunriseDate && countdownMinutes > 0) {
                 const diffMs = currentSunriseDate.getTime() - now.getTime();
                 const diffSeconds = diffMs / 1000;
                 const diffMinutes = diffSeconds / 60;
 
-                // הבהוב על 00:00 למשך 10 שניות לאחר הגעה לאפס
                 if (diffSeconds <= 0 && diffSeconds > -10) {
                     clockEl.innerText = "00:00";
                     clockEl.classList.add('countdown-color', 'blink');
@@ -390,24 +685,32 @@
                     return;
                 }
 
-                // טיימר ספירה לאחור (לפני הנץ)
                 if (diffMinutes > 0 && diffMinutes <= countdownMinutes) {
                     clockEl.innerText = formatDiffToHMS(diffMs);
                     clockEl.classList.add('countdown-color');
                     clockEl.classList.remove('blink', 'sunrise-color');
                     
                     zmanimNormalEl.classList.add('hidden');
+                    shabbatTimesEl.classList.add('hidden');
+                    shabbatTimesEl.classList.remove('flex');
                     zmanimCountdownEl.classList.remove('hidden');
                     return; 
                 }
             }
 
-            // שעון רגיל
             clockEl.innerText = formatTimeHMS(now);
             clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
             
             zmanimNormalEl.classList.remove('hidden');
             zmanimCountdownEl.classList.add('hidden');
+            
+            if (hasShabbatTimes) {
+                shabbatTimesEl.classList.remove('hidden');
+                shabbatTimesEl.classList.add('flex');
+            } else {
+                shabbatTimesEl.classList.add('hidden');
+                shabbatTimesEl.classList.remove('flex');
+            }
         }
 
         function formatTimeHMS(dateObj) {
@@ -443,14 +746,11 @@
             const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
             const cachedZmanim = JSON.parse(localStorage.getItem('baseZmanimCache') || '{}');
 
-            // Render existing cached or custom data immediately
             renderTable(dates, cachedZmanim, customZmanim);
 
-            // Fetch any missing base zmanim data in chunks
             const missingDates = dates.filter(d => !cachedZmanim[formatDate(d)]);
             
             if (missingDates.length > 0) {
-                // Add loading row
                 tableBody.insertAdjacentHTML('afterbegin', '<tr id="loadingRow"><td colspan="3" class="text-center p-4 text-blue-400 font-bold">טוען זמנים חסרים (מתעדכן אוטומטית)...</td></tr>');
                 
                 for (let i = 0; i < missingDates.length; i += 3) {
@@ -472,9 +772,8 @@
                     }));
                     
                     localStorage.setItem('baseZmanimCache', JSON.stringify(cachedZmanim));
-                    renderTable(dates, cachedZmanim, customZmanim); // Re-render with new data
+                    renderTable(dates, cachedZmanim, customZmanim);
                     
-                    // Small delay to prevent API rate-limiting
                     await new Promise(r => setTimeout(r, 250));
                 }
             }
@@ -505,7 +804,6 @@
                     sunsetVal = formatTimeToInput(sDate);
                 }
 
-                // Highlight today's row
                 const isToday = str === lastFetchedDateString;
                 const rowClass = isToday ? "bg-blue-900/20" : "hover:bg-[#242424]";
 
@@ -535,10 +833,8 @@
                 tableBody.appendChild(tr);
             });
 
-            // Initialize icons for the new undo buttons
             lucide.createIcons();
 
-            // Listen to edits
             tableBody.querySelectorAll('input[type="time"]').forEach(input => {
                 input.addEventListener('change', (e) => {
                     const dateStr = e.target.getAttribute('data-date');
@@ -557,18 +853,16 @@
                     if (Object.keys(currentCustom[dateStr]).length === 0) delete currentCustom[dateStr];
 
                     localStorage.setItem('customZmanim', JSON.stringify(currentCustom));
+                    syncToCloud();
                     
-                    // Force refresh main clock if today was edited
                     if (dateStr === lastFetchedDateString) {
                         fetchDatesAndZmanim();
                     }
                     
-                    // Re-render table to show yellow border and undo button
                     loadTableData();
                 });
             });
 
-            // Listen to Undo buttons
             tableBody.querySelectorAll('.undo-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const button = e.currentTarget;
@@ -581,6 +875,7 @@
                         if (Object.keys(currentCustom[dateStr]).length === 0) delete currentCustom[dateStr];
                         
                         localStorage.setItem('customZmanim', JSON.stringify(currentCustom));
+                        syncToCloud();
                         
                         loadTableData();
                         if (dateStr === lastFetchedDateString) fetchDatesAndZmanim();
@@ -598,25 +893,43 @@
             if (isNaN(val)) val = 0;
             globalSunsetOffset = val;
             localStorage.setItem('sunsetOffsetMinutes', globalSunsetOffset);
+            syncToCloud();
             
-            // Re-render table and update clock
             loadTableData(); 
             fetchDatesAndZmanim();
         });
 
         document.getElementById('openSettingsBtn').addEventListener('click', () => {
             minutesInput.value = countdownMinutes;
+            
+            // טעינת הגדרות ההודעה לשדות
+            announcementTextInput.value = announcementText;
+            announcementTimeInput.value = announcementTime;
+            announcementDurationInput.value = announcementDuration || "";
+
             modal.classList.remove('hidden');
-            loadTableData(); // Trigger loading and rendering table
+            loadTableData(); 
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            // Save Timer
-            let val = parseInt(minutesInput.value);
-            if (isNaN(val) || val < 0) val = 0;
-            
-            countdownMinutes = val;
+            // שמירת הגדרות טיימר
+            let timerVal = parseInt(minutesInput.value);
+            if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
+            countdownMinutes = timerVal;
             localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+
+            // שמירת הגדרות ההודעה המתוזמנת
+            announcementText = announcementTextInput.value.trim();
+            announcementTime = announcementTimeInput.value;
+            let durVal = parseInt(announcementDurationInput.value);
+            if (isNaN(durVal) || durVal < 0) durVal = 0;
+            announcementDuration = durVal;
+            
+            localStorage.setItem('announcementText', announcementText);
+            localStorage.setItem('announcementTime', announcementTime);
+            localStorage.setItem('announcementDuration', announcementDuration);
+
+            syncToCloud();
             
             modal.classList.add('hidden');
             updateClock(); 
@@ -625,6 +938,7 @@
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
             fetchDatesAndZmanim();
+            fetchWeather(); // רענון ידני גם למזג האוויר
             showToast("מרענן נתונים...");
         });
 
@@ -655,7 +969,9 @@
         // --- Initialization ---
 
         fetchDatesAndZmanim();
-        setInterval(updateClock, 1000);
+        fetchWeather(); // הפעלה ראשונה של מזג אוויר
+        setInterval(updateClock, 1000); // שעון רץ כל שנייה
+        setInterval(fetchWeather, 30 * 60 * 1000); // רענון מזג אוויר כל חצי שעה
         updateClock(); 
 
     </script>
