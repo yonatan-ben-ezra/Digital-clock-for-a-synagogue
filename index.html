@@ -217,7 +217,35 @@
                             <input type="date" id="newAnnDate" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
                         </div>
 
-                        <div class="md:col-span-3 flex justify-end mt-2">
+                        <!-- Dynamic: Repeat / Snooze -->
+                        <div class="md:col-span-3 mt-2 border-t border-gray-600 pt-3">
+                            <label class="flex items-center gap-2 text-gray-300 cursor-pointer w-fit hover:text-white transition-colors">
+                                <input type="checkbox" id="newAnnRepeatToggle" class="accent-yellow-500 w-4 h-4">
+                                הפעל חזרות (נודניק)
+                            </label>
+                        </div>
+                        <div id="newAnnRepeatContainer" class="hidden md:col-span-3 grid-cols-1 md:grid-cols-3 gap-3 mt-2 bg-[#242424] p-3 rounded-lg border border-gray-700">
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm">מספר חזרות נוספות:</label>
+                                <input type="number" id="newAnnRepeatCount" min="1" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: 3">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm">מרווח זמן בין חזרות:</label>
+                                <input type="number" id="newAnnRepeatInterval" min="1" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: 5">
+                            </div>
+                            <div>
+                                <label class="block text-gray-300 mb-1 text-sm">יחידת זמן:</label>
+                                <select id="newAnnRepeatUnit" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
+                                    <option value="minutes">דקות</option>
+                                    <option value="seconds">שניות</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="md:col-span-3 flex justify-end mt-2 gap-2">
+                            <button id="cancelEditAnnBtn" class="hidden bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i data-lucide="x" class="w-4 h-4"></i> ביטול עריכה
+                            </button>
                             <button id="addAnnBtn" class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                                 <i data-lucide="plus" class="w-4 h-4"></i> הוסף לרשימה
                             </button>
@@ -411,6 +439,7 @@
         
         // Announcements Array
         let announcementsList = JSON.parse(localStorage.getItem('smartAnnouncements')) || [];
+        let editingAnnId = null;
 
         let lastFetchedDateString = "";
         let toastTimeout;
@@ -441,7 +470,11 @@
         const newAnnType = document.getElementById('newAnnType');
         const newAnnWeekdays = document.getElementById('newAnnWeekdays');
         const newAnnDateContainer = document.getElementById('newAnnDateContainer');
+        const newAnnRepeatToggle = document.getElementById('newAnnRepeatToggle');
+        const newAnnRepeatContainer = document.getElementById('newAnnRepeatContainer');
         const announcementsListEl = document.getElementById('announcementsList');
+        const addAnnBtn = document.getElementById('addAnnBtn');
+        const cancelEditAnnBtn = document.getElementById('cancelEditAnnBtn');
         
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
@@ -462,8 +495,43 @@
             if (e.target.value === 'date') newAnnDateContainer.classList.remove('hidden');
         });
 
-        // פונקציית הוספת הודעה חדשה
-        document.getElementById('addAnnBtn').addEventListener('click', () => {
+        // הצגת/הסתרת שדות הנודניק
+        newAnnRepeatToggle.addEventListener('change', (e) => {
+            if(e.target.checked) {
+                newAnnRepeatContainer.classList.remove('hidden');
+                newAnnRepeatContainer.classList.add('grid');
+            } else {
+                newAnnRepeatContainer.classList.add('hidden');
+                newAnnRepeatContainer.classList.remove('grid');
+            }
+        });
+
+        function resetAnnForm() {
+            editingAnnId = null;
+            document.getElementById('newAnnText').value = '';
+            document.getElementById('newAnnTime').value = '';
+            document.getElementById('newAnnDuration').value = '';
+            newAnnType.value = 'daily';
+            newAnnType.dispatchEvent(new Event('change'));
+            document.querySelectorAll('.ann-weekday-cb').forEach(cb => cb.checked = false);
+            document.getElementById('newAnnDate').value = '';
+            
+            newAnnRepeatToggle.checked = false;
+            newAnnRepeatToggle.dispatchEvent(new Event('change'));
+            document.getElementById('newAnnRepeatCount').value = '';
+            document.getElementById('newAnnRepeatInterval').value = '';
+            document.getElementById('newAnnRepeatUnit').value = 'minutes';
+
+            addAnnBtn.innerHTML = `<i data-lucide="plus" class="w-4 h-4"></i> הוסף לרשימה`;
+            addAnnBtn.className = "bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2";
+            cancelEditAnnBtn.classList.add('hidden');
+            lucide.createIcons();
+        }
+
+        cancelEditAnnBtn.addEventListener('click', resetAnnForm);
+
+        // פונקציית הוספת/עריכת הודעה חדשה
+        addAnnBtn.addEventListener('click', () => {
             const text = document.getElementById('newAnnText').value.trim();
             const time = document.getElementById('newAnnTime').value;
             const duration = parseInt(document.getElementById('newAnnDuration').value);
@@ -493,23 +561,43 @@
                 }
             }
 
-            const newAnn = {
-                id: Date.now().toString(), // מזהה ייחודי
-                text, time, duration, type, weeklyDays, specificDate
-            };
+            let repeatCount = 0;
+            let repeatInterval = 0;
+            let repeatUnit = 'minutes';
 
-            announcementsList.push(newAnn);
+            if (newAnnRepeatToggle.checked) {
+                repeatCount = parseInt(document.getElementById('newAnnRepeatCount').value);
+                repeatInterval = parseInt(document.getElementById('newAnnRepeatInterval').value);
+                repeatUnit = document.getElementById('newAnnRepeatUnit').value;
+                
+                if (isNaN(repeatCount) || repeatCount <= 0 || isNaN(repeatInterval) || repeatInterval <= 0) {
+                    showToast("נא למלא את נתוני הנודניק או לבטל את הסימון.");
+                    return;
+                }
+            }
+
+            if (editingAnnId) {
+                // Update existing
+                const index = announcementsList.findIndex(a => a.id === editingAnnId);
+                if (index !== -1) {
+                    announcementsList[index] = {
+                        id: editingAnnId, text, time, duration, type, weeklyDays, specificDate, repeatCount, repeatInterval, repeatUnit
+                    };
+                }
+                showToast("הודעה עודכנה בהצלחה!");
+            } else {
+                // Add new
+                const newAnn = {
+                    id: Date.now().toString(), // מזהה ייחודי
+                    text, time, duration, type, weeklyDays, specificDate, repeatCount, repeatInterval, repeatUnit
+                };
+                announcementsList.push(newAnn);
+                showToast("הודעה נוספה בהצלחה!");
+            }
+
             saveAnnouncementsLocalAndCloud();
-
-            // איפוס טופס ההוספה
-            document.getElementById('newAnnText').value = '';
-            document.getElementById('newAnnTime').value = '';
-            document.getElementById('newAnnDuration').value = '';
-            document.querySelectorAll('.ann-weekday-cb').forEach(cb => cb.checked = false);
-            document.getElementById('newAnnDate').value = '';
-
+            resetAnnForm();
             renderAnnouncementsUI();
-            showToast("הודעה נוספה בהצלחה!");
         });
 
         // רינדור רשימת ההודעות הקיימות ב-UI
@@ -534,30 +622,87 @@
                     typeDesc = `ימים: ${activeDays}`;
                 }
 
+                let repeatDesc = "";
+                if (ann.repeatCount && ann.repeatCount > 0) {
+                    const unitName = ann.repeatUnit === 'seconds' ? 'שניות' : 'דקות';
+                    repeatDesc = `<span class="text-yellow-500 ml-2"><i data-lucide="repeat" class="w-3 h-3 inline mb-0.5"></i> עוד ${ann.repeatCount} פעמים כל ${ann.repeatInterval} ${unitName}</span>`;
+                }
+
                 const el = document.createElement('div');
-                el.className = "flex justify-between items-center bg-[#1e1e1e] p-3 rounded-lg border border-gray-600";
+                el.className = "flex justify-between items-center bg-[#1e1e1e] p-3 rounded-lg border border-gray-600 transition-colors hover:border-gray-500";
                 el.innerHTML = `
                     <div>
                         <div class="font-bold text-yellow-400 text-lg">${ann.text}</div>
-                        <div class="text-sm text-gray-300 mt-1 flex gap-3">
+                        <div class="text-sm text-gray-300 mt-1 flex flex-wrap gap-x-3 gap-y-1">
                             <span><i data-lucide="clock" class="w-4 h-4 inline mb-0.5"></i> ${ann.time}</span>
                             <span><i data-lucide="timer" class="w-4 h-4 inline mb-0.5"></i> ${ann.duration} שניות</span>
                             <span><i data-lucide="calendar" class="w-4 h-4 inline mb-0.5"></i> ${typeDesc}</span>
+                            ${repeatDesc}
                         </div>
                     </div>
-                    <button class="text-gray-500 hover:text-red-400 transition-colors delete-ann-btn bg-gray-800 p-2 rounded-md" data-id="${ann.id}" title="מחק הודעה">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
+                    <div class="flex gap-2">
+                        <button class="text-gray-400 hover:text-blue-400 transition-colors edit-ann-btn bg-gray-800 p-2 rounded-md" data-id="${ann.id}" title="ערוך הודעה">
+                            <i data-lucide="pencil" class="w-5 h-5"></i>
+                        </button>
+                        <button class="text-gray-400 hover:text-red-400 transition-colors delete-ann-btn bg-gray-800 p-2 rounded-md" data-id="${ann.id}" title="מחק הודעה">
+                            <i data-lucide="trash-2" class="w-5 h-5"></i>
+                        </button>
+                    </div>
                 `;
                 announcementsListEl.appendChild(el);
             });
             lucide.createIcons();
+
+            // אירועי לחיצה לעריכה
+            document.querySelectorAll('.edit-ann-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    const ann = announcementsList.find(a => a.id === id);
+                    if (ann) {
+                        editingAnnId = id;
+                        document.getElementById('newAnnText').value = ann.text;
+                        document.getElementById('newAnnTime').value = ann.time;
+                        document.getElementById('newAnnDuration').value = ann.duration;
+                        
+                        newAnnType.value = ann.type;
+                        newAnnType.dispatchEvent(new Event('change'));
+
+                        if (ann.type === 'weekly' && ann.weeklyDays) {
+                            document.querySelectorAll('.ann-weekday-cb').forEach(cb => {
+                                cb.checked = ann.weeklyDays.includes(parseInt(cb.value));
+                            });
+                        } else if (ann.type === 'date') {
+                            document.getElementById('newAnnDate').value = ann.specificDate || '';
+                        }
+
+                        if (ann.repeatCount && ann.repeatCount > 0) {
+                            newAnnRepeatToggle.checked = true;
+                            newAnnRepeatToggle.dispatchEvent(new Event('change'));
+                            document.getElementById('newAnnRepeatCount').value = ann.repeatCount;
+                            document.getElementById('newAnnRepeatInterval').value = ann.repeatInterval;
+                            document.getElementById('newAnnRepeatUnit').value = ann.repeatUnit || 'minutes';
+                        } else {
+                            newAnnRepeatToggle.checked = false;
+                            newAnnRepeatToggle.dispatchEvent(new Event('change'));
+                        }
+
+                        addAnnBtn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i> עדכן הודעה`;
+                        addAnnBtn.className = "bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2";
+                        cancelEditAnnBtn.classList.remove('hidden');
+                        lucide.createIcons();
+                        
+                        // גלילה למעלה לטופס העריכה
+                        document.getElementById('newAnnText').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            });
 
             // אירועי לחיצה למחיקת הודעה
             document.querySelectorAll('.delete-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
                     announcementsList = announcementsList.filter(a => a.id !== id);
+                    if (editingAnnId === id) resetAnnForm();
                     saveAnnouncementsLocalAndCloud();
                     renderAnnouncementsUI();
                 });
@@ -797,27 +942,37 @@
             }
 
             // -- Check Smart Announcements --
-            let activeAnnouncement = null;
-            const currentDayInt = now.getDay();
+        let activeAnnouncement = null;
+        const currentDayInt = now.getDay();
+        
+        for (const ann of announcementsList) {
+            // בדיקה אם ההודעה רלוונטית להיום
+            let typeMatch = false;
+            if (ann.type === 'daily') typeMatch = true;
+            else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
+            else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
+
+            if (!typeMatch) continue;
+
+            // בדיקת השעות כולל חזרות (נודניק)
+            const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
+            const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
             
-            for (const ann of announcementsList) {
-                // בדיקה אם ההודעה רלוונטית להיום
-                let typeMatch = false;
-                if (ann.type === 'daily') typeMatch = true;
-                else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
-                else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
+            let repeats = ann.repeatCount ? parseInt(ann.repeatCount) : 0;
+            let intervalSec = ann.repeatInterval ? parseInt(ann.repeatInterval) : 0;
+            if (ann.repeatUnit === 'minutes') intervalSec *= 60;
 
-                if (!typeMatch) continue;
-
-                // בדיקת השעות
-                const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
-                const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
-                const aEnd = new Date(aStart.getTime() + ann.duration * 1000); 
+            for (let i = 0; i <= repeats; i++) {
+                const currentStartMs = aStart.getTime() + (i * intervalSec * 1000);
+                const currentEndMs = currentStartMs + (ann.duration * 1000);
                 
-                if (now >= aStart && now < aEnd) {
+                if (now.getTime() >= currentStartMs && now.getTime() < currentEndMs) {
                     activeAnnouncement = ann;
-                    break; // ברגע שמצאנו הודעה פעילה, מספיק.
+                    break; 
                 }
+            }
+            if (activeAnnouncement) break; // מצאנו הודעה פעילה כולל החזרות
+        }
             }
 
             if (activeAnnouncement) {
