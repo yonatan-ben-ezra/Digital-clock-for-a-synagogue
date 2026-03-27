@@ -177,24 +177,57 @@
                     <p class="text-sm text-gray-500 mt-2">הזן 0 כדי לבטל את הטיימר.</p>
                 </div>
 
-                <!-- Scheduled Announcement Settings -->
+                <!-- Smart Scheduled Announcements Settings -->
                 <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
                     <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2">
-                        <i data-lucide="megaphone" class="w-5 h-5 text-yellow-400"></i> הודעה מתוזמנת למסך
+                        <i data-lucide="megaphone" class="w-5 h-5 text-yellow-400"></i> מנגנון הודעות חכם
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div class="md:col-span-2">
+                    
+                    <!-- Form to add a new announcement -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 bg-[#1e1e1e] p-4 rounded-lg border border-gray-600">
+                        <div class="md:col-span-3">
                             <label class="block text-gray-300 mb-1 text-sm">תוכן ההודעה:</label>
-                            <input type="text" id="announcementTextInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: יעלה ויבוא / נא לכבות פלאפונים">
+                            <input type="text" id="newAnnText" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: יעלה ויבוא / נא לכבות פלאפונים">
                         </div>
                         <div>
-                            <label class="block text-gray-300 mb-1 text-sm">שעת תצוגה (כולל שניות):</label>
-                            <input type="time" step="1" id="announcementTimeInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
+                            <label class="block text-gray-300 mb-1 text-sm">שעת תצוגה:</label>
+                            <input type="time" step="1" id="newAnnTime" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
                         </div>
                         <div>
-                            <label class="block text-gray-300 mb-1 text-sm">משך תצוגה (בשניות):</label>
-                            <input type="number" id="announcementDurationInput" min="0" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: 60">
+                            <label class="block text-gray-300 mb-1 text-sm">משך (שניות):</label>
+                            <input type="number" id="newAnnDuration" min="1" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: 60">
                         </div>
+                        <div>
+                            <label class="block text-gray-300 mb-1 text-sm">סוג חזרה:</label>
+                            <select id="newAnnType" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
+                                <option value="daily">כל יום</option>
+                                <option value="weekly">ימים בשבוע</option>
+                                <option value="date">תאריך ספציפי</option>
+                            </select>
+                        </div>
+
+                        <!-- Dynamic: Weekdays -->
+                        <div id="newAnnWeekdays" class="hidden md:col-span-3 flex flex-wrap gap-2 mt-1">
+                            <!-- JS Will Inject Checkboxes Here -->
+                        </div>
+
+                        <!-- Dynamic: Date -->
+                        <div id="newAnnDateContainer" class="hidden md:col-span-3 mt-1">
+                            <label class="block text-gray-300 mb-1 text-sm">בחר תאריך:</label>
+                            <input type="date" id="newAnnDate" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
+                        </div>
+
+                        <div class="md:col-span-3 flex justify-end mt-2">
+                            <button id="addAnnBtn" class="bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
+                                <i data-lucide="plus" class="w-4 h-4"></i> הוסף לרשימה
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-600 my-4">
+                    <h4 class="text-sm text-gray-400 mb-2">הודעות פעילות במערכת:</h4>
+                    <div id="announcementsList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        <!-- Items injected here via JS -->
                     </div>
                 </div>
 
@@ -316,20 +349,16 @@
                         }
                         needsRefresh = true;
                     }
-                    if (data.announcementText !== undefined && data.announcementText !== announcementText) {
-                        announcementText = data.announcementText;
-                        localStorage.setItem('announcementText', announcementText);
-                        needsRefresh = true;
-                    }
-                    if (data.announcementTime !== undefined && data.announcementTime !== announcementTime) {
-                        announcementTime = data.announcementTime;
-                        localStorage.setItem('announcementTime', announcementTime);
-                        needsRefresh = true;
-                    }
-                    if (data.announcementDuration !== undefined && data.announcementDuration !== announcementDuration) {
-                        announcementDuration = data.announcementDuration;
-                        localStorage.setItem('announcementDuration', announcementDuration);
-                        needsRefresh = true;
+                    
+                    // סנכרון מערך ההודעות
+                    if (data.announcements !== undefined) {
+                        const cloudAnnouncementsStr = JSON.stringify(data.announcements);
+                        const localAnnouncementsStr = JSON.stringify(announcementsList);
+                        if (cloudAnnouncementsStr !== localAnnouncementsStr) {
+                            announcementsList = data.announcements;
+                            localStorage.setItem('smartAnnouncements', cloudAnnouncementsStr);
+                            needsRefresh = true;
+                        }
                     }
 
                     if (data.customZmanim) {
@@ -346,13 +375,10 @@
                         const modal = document.getElementById('settingsModal');
                         if (modal && !modal.classList.contains('hidden')) {
                             loadTableData();
-                            // עדכון השדות של ההודעה במודל אם פתוח
-                            document.getElementById('announcementTextInput').value = announcementText;
-                            document.getElementById('announcementTimeInput').value = announcementTime;
-                            document.getElementById('announcementDurationInput').value = announcementDuration || "";
+                            renderAnnouncementsUI();
                         }
                         showToast("הנתונים סונכרנו מהענן!");
-                        updateClock(); // בדיקה מיידית האם צריך להציג את ההודעה
+                        updateClock(); 
                     }
                 }
             }, (error) => {
@@ -368,9 +394,7 @@
                 await setDoc(docRef, {
                     countdownMinutes: countdownMinutes,
                     globalSunsetOffset: globalSunsetOffset,
-                    announcementText: announcementText,
-                    announcementTime: announcementTime,
-                    announcementDuration: announcementDuration,
+                    announcements: announcementsList, // שומר את כל רשימת ההודעות
                     customZmanim: customZmanim,
                     lastUpdated: new Date().toISOString()
                 }, { merge: true });
@@ -379,16 +403,14 @@
             }
         }
 
-        // State Variables
+        // --- State Variables ---
         let currentSunriseDate = null;
         let currentSunsetDate = null;
         let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
         
-        // Announcement Variables
-        let announcementText = localStorage.getItem('announcementText') || '';
-        let announcementTime = localStorage.getItem('announcementTime') || '';
-        let announcementDuration = parseInt(localStorage.getItem('announcementDuration')) || 0;
+        // Announcements Array
+        let announcementsList = JSON.parse(localStorage.getItem('smartAnnouncements')) || [];
 
         let lastFetchedDateString = "";
         let toastTimeout;
@@ -409,18 +431,144 @@
         const announcementOverlay = document.getElementById('announcementOverlay');
         const announcementTextDisplay = document.getElementById('announcementTextDisplay');
 
-        // Modal Elements
         const modal = document.getElementById('settingsModal');
         const minutesInput = document.getElementById('minutesInput');
         const sunsetOffsetInput = document.getElementById('sunsetOffsetInput');
-        
-        const announcementTextInput = document.getElementById('announcementTextInput');
-        const announcementTimeInput = document.getElementById('announcementTimeInput');
-        const announcementDurationInput = document.getElementById('announcementDurationInput');
-        
-        // Toast Elements
         const toastEl = document.getElementById('toast');
         const toastMsgEl = document.getElementById('toastMsg');
+
+        // Smart Announcements UI Elements
+        const newAnnType = document.getElementById('newAnnType');
+        const newAnnWeekdays = document.getElementById('newAnnWeekdays');
+        const newAnnDateContainer = document.getElementById('newAnnDateContainer');
+        const announcementsListEl = document.getElementById('announcementsList');
+        
+        const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+        // --- Init Smart Announcements UI ---
+        
+        // יצירת הצ'קבוקסים של ימי השבוע
+        newAnnWeekdays.innerHTML = hebrewDaysArr.map((d, i) => `
+            <label class="flex items-center gap-1 bg-[#1e1e1e] px-3 py-1.5 rounded-lg cursor-pointer border border-gray-600 hover:border-yellow-500 transition-colors">
+                <input type="checkbox" value="${i}" class="ann-weekday-cb accent-yellow-500 w-4 h-4"> ${d}'
+            </label>
+        `).join('');
+
+        // מעבר בין סוגי התזמון בהוספת הודעה
+        newAnnType.addEventListener('change', (e) => {
+            newAnnWeekdays.classList.add('hidden');
+            newAnnDateContainer.classList.add('hidden');
+            if (e.target.value === 'weekly') newAnnWeekdays.classList.remove('hidden');
+            if (e.target.value === 'date') newAnnDateContainer.classList.remove('hidden');
+        });
+
+        // פונקציית הוספת הודעה חדשה
+        document.getElementById('addAnnBtn').addEventListener('click', () => {
+            const text = document.getElementById('newAnnText').value.trim();
+            const time = document.getElementById('newAnnTime').value;
+            const duration = parseInt(document.getElementById('newAnnDuration').value);
+            const type = newAnnType.value;
+
+            if(!text || !time || isNaN(duration) || duration <= 0) {
+                showToast("נא למלא תוכן, שעה ומשך זמן תקינים.");
+                return;
+            }
+
+            let weeklyDays = [];
+            let specificDate = "";
+
+            if(type === 'weekly') {
+                document.querySelectorAll('.ann-weekday-cb:checked').forEach(cb => {
+                    weeklyDays.push(parseInt(cb.value));
+                });
+                if(weeklyDays.length === 0) {
+                    showToast("נא לבחור לפחות יום אחד בשבוע.");
+                    return;
+                }
+            } else if(type === 'date') {
+                specificDate = document.getElementById('newAnnDate').value;
+                if(!specificDate) {
+                    showToast("נא לבחור תאריך.");
+                    return;
+                }
+            }
+
+            const newAnn = {
+                id: Date.now().toString(), // מזהה ייחודי
+                text, time, duration, type, weeklyDays, specificDate
+            };
+
+            announcementsList.push(newAnn);
+            saveAnnouncementsLocalAndCloud();
+
+            // איפוס טופס ההוספה
+            document.getElementById('newAnnText').value = '';
+            document.getElementById('newAnnTime').value = '';
+            document.getElementById('newAnnDuration').value = '';
+            document.querySelectorAll('.ann-weekday-cb').forEach(cb => cb.checked = false);
+            document.getElementById('newAnnDate').value = '';
+
+            renderAnnouncementsUI();
+            showToast("הודעה נוספה בהצלחה!");
+        });
+
+        // רינדור רשימת ההודעות הקיימות ב-UI
+        function renderAnnouncementsUI() {
+            announcementsListEl.innerHTML = '';
+            if(announcementsList.length === 0) {
+                announcementsListEl.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">אין הודעות מתוזמנות במערכת.</div>';
+                return;
+            }
+
+            // מיון לפי שעה כדי שיהיה מסודר
+            const sortedList = [...announcementsList].sort((a, b) => a.time.localeCompare(b.time));
+
+            sortedList.forEach(ann => {
+                let typeDesc = "כל יום";
+                if(ann.type === 'date') {
+                    const [y, m, d] = ann.specificDate.split('-');
+                    typeDesc = `חד פעמי: ${d}/${m}/${y}`;
+                }
+                if(ann.type === 'weekly') {
+                    const activeDays = ann.weeklyDays.map(d => hebrewDaysArr[d].substring(0,1) + "'").join(', ');
+                    typeDesc = `ימים: ${activeDays}`;
+                }
+
+                const el = document.createElement('div');
+                el.className = "flex justify-between items-center bg-[#1e1e1e] p-3 rounded-lg border border-gray-600";
+                el.innerHTML = `
+                    <div>
+                        <div class="font-bold text-yellow-400 text-lg">${ann.text}</div>
+                        <div class="text-sm text-gray-300 mt-1 flex gap-3">
+                            <span><i data-lucide="clock" class="w-4 h-4 inline mb-0.5"></i> ${ann.time}</span>
+                            <span><i data-lucide="timer" class="w-4 h-4 inline mb-0.5"></i> ${ann.duration} שניות</span>
+                            <span><i data-lucide="calendar" class="w-4 h-4 inline mb-0.5"></i> ${typeDesc}</span>
+                        </div>
+                    </div>
+                    <button class="text-gray-500 hover:text-red-400 transition-colors delete-ann-btn bg-gray-800 p-2 rounded-md" data-id="${ann.id}" title="מחק הודעה">
+                        <i data-lucide="trash-2" class="w-5 h-5"></i>
+                    </button>
+                `;
+                announcementsListEl.appendChild(el);
+            });
+            lucide.createIcons();
+
+            // אירועי לחיצה למחיקת הודעה
+            document.querySelectorAll('.delete-ann-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    announcementsList = announcementsList.filter(a => a.id !== id);
+                    saveAnnouncementsLocalAndCloud();
+                    renderAnnouncementsUI();
+                });
+            });
+        }
+
+        function saveAnnouncementsLocalAndCloud() {
+            localStorage.setItem('smartAnnouncements', JSON.stringify(announcementsList));
+            syncToCloud(); 
+            updateClock();
+        }
 
         function showToast(message) {
             toastMsgEl.innerText = message;
@@ -578,8 +726,7 @@
                 const hebDateData = await hebDateRes.json();
                 
                 const cleanHebrew = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
-                const weekdays = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-                const weekdayName = "יום " + weekdays[now.getDay()];
+                const weekdayName = "יום " + hebrewDaysArr[now.getDay()];
 
                 hebrewDateEl.innerText = `${weekdayName}, ${cleanHebrew}`;
                 gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
@@ -649,21 +796,34 @@
                 fetchDatesAndZmanim();
             }
 
-            // -- Check for Scheduled Announcement --
-            if (announcementText && announcementTime && announcementDuration > 0) {
-                const [aHour, aMin, aSec] = announcementTime.split(':').map(Number);
+            // -- Check Smart Announcements --
+            let activeAnnouncement = null;
+            const currentDayInt = now.getDay();
+            
+            for (const ann of announcementsList) {
+                // בדיקה אם ההודעה רלוונטית להיום
+                let typeMatch = false;
+                if (ann.type === 'daily') typeMatch = true;
+                else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
+                else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
+
+                if (!typeMatch) continue;
+
+                // בדיקת השעות
+                const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
                 const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
-                const aEnd = new Date(aStart.getTime() + announcementDuration * 1000); // מוסיפים את השניות
+                const aEnd = new Date(aStart.getTime() + ann.duration * 1000); 
                 
-                // אם הזמן הנוכחי נופל בדיוק בתוך הטווח המתוזמן
                 if (now >= aStart && now < aEnd) {
-                    announcementTextDisplay.innerText = announcementText;
-                    announcementOverlay.classList.remove('hidden');
-                    announcementOverlay.classList.add('flex');
-                } else {
-                    announcementOverlay.classList.add('hidden');
-                    announcementOverlay.classList.remove('flex');
+                    activeAnnouncement = ann;
+                    break; // ברגע שמצאנו הודעה פעילה, מספיק.
                 }
+            }
+
+            if (activeAnnouncement) {
+                announcementTextDisplay.innerText = activeAnnouncement.text;
+                announcementOverlay.classList.remove('hidden');
+                announcementOverlay.classList.add('flex');
             } else {
                 announcementOverlay.classList.add('hidden');
                 announcementOverlay.classList.remove('flex');
@@ -902,38 +1062,22 @@
         document.getElementById('openSettingsBtn').addEventListener('click', () => {
             minutesInput.value = countdownMinutes;
             
-            // טעינת הגדרות ההודעה לשדות
-            announcementTextInput.value = announcementText;
-            announcementTimeInput.value = announcementTime;
-            announcementDurationInput.value = announcementDuration || "";
-
             modal.classList.remove('hidden');
             loadTableData(); 
+            renderAnnouncementsUI();
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            // שמירת הגדרות טיימר
+            // שמירת הגדרות טיימר (ההודעות נשמרות באופן חי בעת לחיצה על "הוסף" או "מחק")
             let timerVal = parseInt(minutesInput.value);
             if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
             countdownMinutes = timerVal;
             localStorage.setItem('netzCountdownMinutes', countdownMinutes);
 
-            // שמירת הגדרות ההודעה המתוזמנת
-            announcementText = announcementTextInput.value.trim();
-            announcementTime = announcementTimeInput.value;
-            let durVal = parseInt(announcementDurationInput.value);
-            if (isNaN(durVal) || durVal < 0) durVal = 0;
-            announcementDuration = durVal;
-            
-            localStorage.setItem('announcementText', announcementText);
-            localStorage.setItem('announcementTime', announcementTime);
-            localStorage.setItem('announcementDuration', announcementDuration);
-
             syncToCloud();
             
             modal.classList.add('hidden');
             updateClock(); 
-            showToast("ההגדרות נשמרו בהצלחה!");
         });
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
