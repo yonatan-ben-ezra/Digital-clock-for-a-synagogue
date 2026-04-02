@@ -80,7 +80,7 @@
 
         /* Adjustments for smaller screens */
         @media (max-width: 768px) {
-            .date-pill { font-size: min(7vw, 12vh); padding: 0.5rem 1.5rem; }
+            .date-pill { font-size: min(5vw, 10vh); padding: 0.5rem 1rem; }
             .clock-display { font-size: min(24vw, 35vh); }
             .zmanim-text { font-size: min(9vw, 12vh); }
             #zmanimNormal { flex-direction: column; gap: 0.5rem; }
@@ -107,7 +107,7 @@
         </div>
 
         <!-- Dates -->
-        <div class="flex flex-wrap justify-center gap-4 items-center mt-20 md:mt-2 w-full">
+        <div class="flex flex-nowrap justify-center gap-2 md:gap-4 items-center mt-20 md:mt-2 w-full">
             <div id="hebrewDate" class="date-pill">טוען...</div>
             <div id="gregDate" class="date-pill">טוען...</div>
         </div>
@@ -119,7 +119,7 @@
     </div>
 
     <!-- Zmanim Footer Container -->
-    <div class="flex flex-col items-center pb-4 md:pb-8">
+    <div class="flex flex-col items-center justify-center pb-4 md:pb-8 min-h-[15vh]">
         
         <!-- Normal Zmanim (Sunrise / Sunset) -->
         <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
@@ -1092,21 +1092,28 @@
             zmanimRemindersEl.classList.add('hidden');
             zmanimRemindersEl.classList.remove('flex');
 
-            let availableSlides = ['normal'];
-            if (hasShabbatTimes) availableSlides.push('shabbat');
-            if (activeReminders.length > 0) availableSlides.push('reminders');
+            let availableSlides = [{type: 'normal'}];
+            if (hasShabbatTimes) availableSlides.push({type: 'shabbat'});
+            
+            // חלוקת תזכורות לפי גודל מסך (במחשב/טלוויזיה נציג 3 יחד, בנייד נציג 1)
+            const maxItemsPerSlide = window.innerWidth < 768 ? 1 : 3;
+            
+            for (let i = 0; i < activeReminders.length; i += maxItemsPerSlide) {
+                const chunk = activeReminders.slice(i, i + maxItemsPerSlide).join(' <span class="divider-color mx-4">|</span> ');
+                availableSlides.push({type: 'reminder', content: chunk});
+            }
 
             const slideDuration = 6; // שניות לכל שקופית
             const currentSlideIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableSlides.length;
             const currentSlide = availableSlides[currentSlideIndex];
 
-            if (currentSlide === 'normal') {
+            if (currentSlide.type === 'normal') {
                 zmanimNormalEl.classList.remove('hidden');
-            } else if (currentSlide === 'shabbat') {
+            } else if (currentSlide.type === 'shabbat') {
                 shabbatTimesEl.classList.remove('hidden');
                 shabbatTimesEl.classList.add('flex');
-            } else if (currentSlide === 'reminders') {
-                zmanimRemindersEl.innerHTML = activeReminders.join(' <span class="divider-color mx-4">|</span> ');
+            } else if (currentSlide.type === 'reminder') {
+                zmanimRemindersEl.innerHTML = currentSlide.content;
                 zmanimRemindersEl.classList.remove('hidden');
                 zmanimRemindersEl.classList.add('flex');
             }
