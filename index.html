@@ -900,9 +900,6 @@
                                         }
                                     } else if (item.category === 'havdalah') {
                                         shabbatHavdalah = new Date(item.date);
-                                        if (globalSunsetOffset) {
-                                            shabbatHavdalah.setMinutes(shabbatHavdalah.getMinutes() + globalSunsetOffset);
-                                        }
                                     }
                                 }
                             }
