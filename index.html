@@ -51,7 +51,7 @@
         .sunrise-color { color: #00E5FF; }
         .sunset-color { color: #FF9800; }
         .divider-color { color: #4B5563; }
-        .countdown-color { color: #4ADE80; } /* צבע ירוק לטיימר */
+        .countdown-color { color: #4ADE80; }
 
         @keyframes blinker {
             50% { opacity: 0; }
@@ -60,25 +60,15 @@
             animation: blinker 1s linear infinite;
         }
 
-        /* Modal styling */
         .modal-bg {
             backdrop-filter: blur(8px);
             background-color: rgba(0, 0, 0, 0.7);
         }
 
-        /* Table scrollbar styling */
-        .custom-scrollbar::-webkit-scrollbar {
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #4B5563;
-            border-radius: 4px;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #1e1e1e; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #4B5563; border-radius: 4px; }
 
-        /* Adjustments for smaller screens */
         @media (max-width: 768px) {
             .date-pill { font-size: min(6vw, 10vh); padding: 0.5rem 1.5rem; }
             .clock-display { font-size: min(24vw, 35vh); }
@@ -91,9 +81,7 @@
 </head>
 <body class="h-screen w-screen flex flex-col justify-between p-6 md:p-10 relative">
 
-    <!-- Top Bar: Settings, Refresh, Fullscreen, and Dates -->
     <div class="relative w-full flex justify-center items-start">
-        <!-- Action Buttons -->
         <div class="flex gap-4 z-10 absolute left-0 top-0 items-center">
             <button id="fullscreenBtn" class="text-gray-400 hover:text-white transition-colors" title="מסך מלא">
                 <i data-lucide="maximize" class="w-8 h-8 md:w-10 md:h-10"></i>
@@ -106,58 +94,43 @@
             </button>
         </div>
 
-        <!-- Dates -->
         <div class="flex flex-wrap justify-center gap-4 items-center mt-20 md:mt-2 w-full">
             <div id="hebrewDate" class="date-pill">טוען...</div>
             <div id="gregDate" class="date-pill">טוען...</div>
         </div>
     </div>
 
-    <!-- Main Clock Container -->
     <div class="flex flex-col items-center justify-center flex-grow relative">
         <div id="clock" class="clock-display transition-opacity duration-500">00:00:00</div>
     </div>
 
-    <!-- Zmanim Footer Container -->
     <div class="flex flex-col items-center pb-4 md:pb-8">
-        
-        <!-- Normal Zmanim (Sunrise / Sunset) -->
         <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
             <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
             <div class="divider-color">|</div>
             <div class="sunset-color">שקיעה: <span id="sunsetTime">--:--</span></div>
         </div>
 
-        <!-- Shabbat / Holiday Times (Only shown on relevant days) -->
-        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400" style="font-size: min(5vw, 10vh); font-weight: 700;">
-        </div>
+        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400" style="font-size: min(5vw, 10vh); font-weight: 700;"></div>
 
-        <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
         <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
             <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
         </div>
-
     </div>
 
-    <!-- Scheduled Announcement Overlay -->
     <div id="announcementOverlay" class="hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm flex-col items-center justify-center p-10 text-center transition-opacity duration-500">
         <div class="animate-bounce mb-6">
             <i data-lucide="bell-ring" class="w-20 h-20 text-yellow-400"></i>
         </div>
         <div id="announcementTextDisplay" class="text-yellow-400 font-black leading-tight" style="font-size: min(12vw, 20vh); text-shadow: 0 10px 30px rgba(0,0,0,1);">
-            <!-- הטקסט יוזרק לכאן -->
         </div>
     </div>
 
-    <!-- Weather Widget (Bottom Left) -->
     <div id="weatherWidget" class="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex items-center gap-3 bg-[#242424]/80 backdrop-blur-md border border-gray-700/50 p-3 rounded-2xl shadow-lg opacity-0 transition-opacity duration-1000">
-        <div id="weatherIconContainer">
-            <!-- Icon injected by JS -->
-        </div>
+        <div id="weatherIconContainer"></div>
         <div id="weatherTemp" class="text-xl md:text-3xl font-bold text-gray-200" dir="ltr">--°C</div>
     </div>
 
-    <!-- Settings Modal -->
     <div id="settingsModal" class="hidden fixed inset-0 z-50 flex justify-center items-center modal-bg py-4">
         <div class="bg-[#1e1e1e] border border-gray-700 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl mx-4 flex flex-col max-h-full">
             <h2 class="text-2xl font-bold mb-4 text-white flex items-center gap-2 flex-shrink-0">
@@ -166,7 +139,6 @@
             
             <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
                 
-                <!-- Timer Settings -->
                 <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
                     <label for="minutesInput" class="block text-gray-300 mb-2 font-medium">
                         כמה דקות לפני הנץ להתחיל ספירה לאחור?
@@ -177,16 +149,24 @@
                     <p class="text-sm text-gray-500 mt-2">הזן 0 כדי לבטל את הטיימר.</p>
                 </div>
 
-                <!-- Smart Scheduled Announcements Settings -->
                 <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
                     <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2">
                         <i data-lucide="megaphone" class="w-5 h-5 text-yellow-400"></i> מנגנון הודעות חכם
                     </h3>
                     
-                    <!-- Form to add a new announcement -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4 bg-[#1e1e1e] p-4 rounded-lg border border-gray-600">
                         <div class="md:col-span-3">
-                            <label class="block text-gray-300 mb-1 text-sm">תוכן ההודעה:</label>
+                            <label class="block text-gray-300 mb-1 text-sm flex justify-between items-end">
+                                <span>תוכן ההודעה:</span>
+                                <div class="flex gap-2">
+                                    <button id="aiDvarTorahBtn" type="button" class="text-xs bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 px-2 py-1 rounded border border-purple-500/50 transition-colors flex items-center gap-1" title="הצע דבר תורה קצר להיום">
+                                        <span>✨</span> דבר תורה
+                                    </button>
+                                    <button id="aiDraftBtn" type="button" class="text-xs bg-blue-600/30 hover:bg-blue-600/50 text-blue-300 px-2 py-1 rounded border border-blue-500/50 transition-colors flex items-center gap-1" title="כתוב כמה מילים ולחץ כאן לניסוח מכובד">
+                                        <span>✨</span> שפר ניסוח
+                                    </button>
+                                </div>
+                            </label>
                             <input type="text" id="newAnnText" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500" placeholder="לדוגמה: יעלה ויבוא / נא לכבות פלאפונים">
                         </div>
                         <div>
@@ -206,18 +186,13 @@
                             </select>
                         </div>
 
-                        <!-- Dynamic: Weekdays -->
-                        <div id="newAnnWeekdays" class="hidden md:col-span-3 flex flex-wrap gap-2 mt-1">
-                            <!-- JS Will Inject Checkboxes Here -->
-                        </div>
+                        <div id="newAnnWeekdays" class="hidden md:col-span-3 flex flex-wrap gap-2 mt-1"></div>
 
-                        <!-- Dynamic: Date -->
                         <div id="newAnnDateContainer" class="hidden md:col-span-3 mt-1">
                             <label class="block text-gray-300 mb-1 text-sm">בחר תאריך:</label>
                             <input type="date" id="newAnnDate" class="w-full bg-[#2a2a2a] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-yellow-500">
                         </div>
 
-                        <!-- Dynamic: Repeat / Snooze -->
                         <div class="md:col-span-3 mt-2 border-t border-gray-600 pt-3">
                             <label class="flex items-center gap-2 text-gray-300 cursor-pointer w-fit hover:text-white transition-colors">
                                 <input type="checkbox" id="newAnnRepeatToggle" class="accent-yellow-500 w-4 h-4">
@@ -254,12 +229,9 @@
 
                     <hr class="border-gray-600 my-4">
                     <h4 class="text-sm text-gray-400 mb-2">הודעות פעילות במערכת:</h4>
-                    <div id="announcementsList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
-                        <!-- Items injected here via JS -->
-                    </div>
+                    <div id="announcementsList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2"></div>
                 </div>
 
-                <!-- Zmanim Table Editor -->
                 <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700 relative">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                         <div>
@@ -287,7 +259,6 @@
                                 </tr>
                             </thead>
                             <tbody id="zmanimTableBody">
-                                <!-- Data will be populated here -->
                             </tbody>
                         </table>
                     </div>
@@ -303,7 +274,6 @@
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
     <div id="toast" class="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 text-white px-6 py-3 rounded-xl shadow-lg transition-opacity duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-3">
         <i data-lucide="info" class="w-5 h-5 text-blue-400"></i>
         <span id="toastMsg"></span>
@@ -312,7 +282,7 @@
     <!-- Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Initialize Icons
@@ -337,8 +307,14 @@
 
         async function initAuth() {
             try {
+                // המנגנון המעודכן עוקף את השגיאה של אסימון סביבת הפיתוח
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
+                    try {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } catch (tokenErr) {
+                        console.warn("Custom token invalid for external Firebase, falling back to anonymous.");
+                        await signInAnonymously(auth);
+                    }
                 } else {
                     await signInAnonymously(auth);
                 }
@@ -378,7 +354,6 @@
                         needsRefresh = true;
                     }
                     
-                    // סנכרון מערך ההודעות
                     if (data.announcements !== undefined) {
                         const cloudAnnouncementsStr = JSON.stringify(data.announcements);
                         const localAnnouncementsStr = JSON.stringify(announcementsList);
@@ -422,7 +397,7 @@
                 await setDoc(docRef, {
                     countdownMinutes: countdownMinutes,
                     globalSunsetOffset: globalSunsetOffset,
-                    announcements: announcementsList, // שומר את כל רשימת ההודעות
+                    announcements: announcementsList, 
                     customZmanim: customZmanim,
                     lastUpdated: new Date().toISOString()
                 }, { merge: true });
@@ -431,13 +406,95 @@
             }
         }
 
+        // --- Gemini AI Integration ---
+        async function callGemini(promptText) {
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: promptText }] }],
+                systemInstruction: { parts: [{ text: "You are a helpful assistant for a synagogue manager. Always respond in Hebrew. Keep answers respectful, formal, and short for a digital clock display. Do not wrap answers in quotes." }] }
+            };
+
+            let retries = 0;
+            const maxRetries = 5;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            while (retries <= maxRetries) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+                } catch (err) {
+                    if (retries === maxRetries) throw err;
+                    await new Promise(r => setTimeout(r, delays[retries]));
+                    retries++;
+                }
+            }
+        }
+
+        document.getElementById('aiDraftBtn').addEventListener('click', async () => {
+            const input = document.getElementById('newAnnText');
+            const text = input.value.trim();
+            if (!text) {
+                showToast("כתוב כמה מילים קודם כדי שאוכל לשפר אותן!");
+                return;
+            }
+            
+            const btn = document.getElementById('aiDraftBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> מנסח...`;
+            btn.disabled = true;
+
+            try {
+                const result = await callGemini(`נסח את ההוראה הבאה כהודעה קצרה, מכובדת ורשמית (מקסימום 12 מילים) שתוצג על מסך בבית כנסת. הטקסט: ${text}`);
+                if (result) input.value = result;
+                showToast("הניסוח שופר בהצלחה! ✨");
+            } catch (e) {
+                console.error(e);
+                showToast("שגיאה בניסוח. ייתכן שאין מפתח API פעיל כרגע.");
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        });
+
+        document.getElementById('aiDvarTorahBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('aiDvarTorahBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader" class="w-3 h-3 animate-spin"></i> חושב...`;
+            btn.disabled = true;
+
+            try {
+                const today = new Date().toLocaleDateString('he-IL');
+                const result = await callGemini(`הצע משפט מחזק קצר מאוד (עד 12 מילים) המבוסס על אמרת חז"ל, פתגם יהודי, או דבר תורה שמתאים להיום (${today}).`);
+                if (result) {
+                    document.getElementById('newAnnText').value = result;
+                    document.getElementById('newAnnDuration').value = 45; // מתן זמן קריאה סביר
+                    showToast("התווסף דבר תורה! ✨");
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("שגיאה ביצירה. ייתכן שאין מפתח API פעיל כרגע.");
+            } finally {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                lucide.createIcons();
+            }
+        });
+
+
         // --- State Variables ---
         let currentSunriseDate = null;
         let currentSunsetDate = null;
         let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
         
-        // Announcements Array
         let announcementsList = JSON.parse(localStorage.getItem('smartAnnouncements')) || [];
         let editingAnnId = null;
 
@@ -480,14 +537,12 @@
 
         // --- Init Smart Announcements UI ---
         
-        // יצירת הצ'קבוקסים של ימי השבוע
         newAnnWeekdays.innerHTML = hebrewDaysArr.map((d, i) => `
             <label class="flex items-center gap-1 bg-[#1e1e1e] px-3 py-1.5 rounded-lg cursor-pointer border border-gray-600 hover:border-yellow-500 transition-colors">
                 <input type="checkbox" value="${i}" class="ann-weekday-cb accent-yellow-500 w-4 h-4"> ${d}'
             </label>
         `).join('');
 
-        // מעבר בין סוגי התזמון בהוספת הודעה
         newAnnType.addEventListener('change', (e) => {
             newAnnWeekdays.classList.add('hidden');
             newAnnDateContainer.classList.add('hidden');
@@ -495,7 +550,6 @@
             if (e.target.value === 'date') newAnnDateContainer.classList.remove('hidden');
         });
 
-        // הצגת/הסתרת שדות הנודניק
         newAnnRepeatToggle.addEventListener('change', (e) => {
             if(e.target.checked) {
                 newAnnRepeatContainer.classList.remove('hidden');
@@ -530,7 +584,6 @@
 
         cancelEditAnnBtn.addEventListener('click', resetAnnForm);
 
-        // פונקציית הוספת/עריכת הודעה חדשה
         addAnnBtn.addEventListener('click', () => {
             const text = document.getElementById('newAnnText').value.trim();
             const time = document.getElementById('newAnnTime').value;
@@ -577,7 +630,6 @@
             }
 
             if (editingAnnId) {
-                // Update existing
                 const index = announcementsList.findIndex(a => a.id === editingAnnId);
                 if (index !== -1) {
                     announcementsList[index] = {
@@ -586,9 +638,8 @@
                 }
                 showToast("הודעה עודכנה בהצלחה!");
             } else {
-                // Add new
                 const newAnn = {
-                    id: Date.now().toString(), // מזהה ייחודי
+                    id: Date.now().toString(), 
                     text, time, duration, type, weeklyDays, specificDate, repeatCount, repeatInterval, repeatUnit
                 };
                 announcementsList.push(newAnn);
@@ -600,7 +651,6 @@
             renderAnnouncementsUI();
         });
 
-        // רינדור רשימת ההודעות הקיימות ב-UI
         function renderAnnouncementsUI() {
             announcementsListEl.innerHTML = '';
             if(announcementsList.length === 0) {
@@ -608,7 +658,6 @@
                 return;
             }
 
-            // מיון לפי שעה כדי שיהיה מסודר
             const sortedList = [...announcementsList].sort((a, b) => a.time.localeCompare(b.time));
 
             sortedList.forEach(ann => {
@@ -653,7 +702,6 @@
             });
             lucide.createIcons();
 
-            // אירועי לחיצה לעריכה
             document.querySelectorAll('.edit-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
@@ -691,13 +739,11 @@
                         cancelEditAnnBtn.classList.remove('hidden');
                         lucide.createIcons();
                         
-                        // גלילה למעלה לטופס העריכה
                         document.getElementById('newAnnText').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 });
             });
 
-            // אירועי לחיצה למחיקת הודעה
             document.querySelectorAll('.delete-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const id = e.currentTarget.getAttribute('data-id');
@@ -941,38 +987,35 @@
                 fetchDatesAndZmanim();
             }
 
-            // -- Check Smart Announcements --
-        let activeAnnouncement = null;
-        const currentDayInt = now.getDay();
-        
-        for (const ann of announcementsList) {
-            // בדיקה אם ההודעה רלוונטית להיום
-            let typeMatch = false;
-            if (ann.type === 'daily') typeMatch = true;
-            else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
-            else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
-
-            if (!typeMatch) continue;
-
-            // בדיקת השעות כולל חזרות (נודניק)
-            const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
-            const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
+            let activeAnnouncement = null;
+            const currentDayInt = now.getDay();
             
-            let repeats = ann.repeatCount ? parseInt(ann.repeatCount) : 0;
-            let intervalSec = ann.repeatInterval ? parseInt(ann.repeatInterval) : 0;
-            if (ann.repeatUnit === 'minutes') intervalSec *= 60;
+            for (const ann of announcementsList) {
+                let typeMatch = false;
+                if (ann.type === 'daily') typeMatch = true;
+                else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
+                else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
 
-            for (let i = 0; i <= repeats; i++) {
-                const currentStartMs = aStart.getTime() + (i * intervalSec * 1000);
-                const currentEndMs = currentStartMs + (ann.duration * 1000);
+                if (!typeMatch) continue;
+
+                const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
+                const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
                 
-                if (now.getTime() >= currentStartMs && now.getTime() < currentEndMs) {
-                    activeAnnouncement = ann;
-                    break; 
+                let repeats = ann.repeatCount ? parseInt(ann.repeatCount) : 0;
+                let intervalSec = ann.repeatInterval ? parseInt(ann.repeatInterval) : 0;
+                if (ann.repeatUnit === 'minutes') intervalSec *= 60;
+
+                for (let i = 0; i <= repeats; i++) {
+                    const currentStartMs = aStart.getTime() + (i * intervalSec * 1000);
+                    const currentEndMs = currentStartMs + (ann.duration * 1000);
+                    
+                    if (now.getTime() >= currentStartMs && now.getTime() < currentEndMs) {
+                        activeAnnouncement = ann;
+                        break; 
+                    }
                 }
+                if (activeAnnouncement) break;
             }
-            if (activeAnnouncement) break; // מצאנו הודעה פעילה כולל החזרות
-        }
 
             if (activeAnnouncement) {
                 announcementTextDisplay.innerText = activeAnnouncement.text;
@@ -982,7 +1025,6 @@
                 announcementOverlay.classList.add('hidden');
                 announcementOverlay.classList.remove('flex');
             }
-            // --------------------------------------
 
             if (currentSunriseDate && countdownMinutes > 0) {
                 const diffMs = currentSunriseDate.getTime() - now.getTime();
@@ -1200,7 +1242,6 @@
 
         // --- Modal & Settings Logic ---
 
-        // Offset input listener
         sunsetOffsetInput.value = globalSunsetOffset;
         sunsetOffsetInput.addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
@@ -1222,7 +1263,6 @@
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            // שמירת הגדרות טיימר (ההודעות נשמרות באופן חי בעת לחיצה על "הוסף" או "מחק")
             let timerVal = parseInt(minutesInput.value);
             if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
             countdownMinutes = timerVal;
@@ -1236,11 +1276,10 @@
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
             fetchDatesAndZmanim();
-            fetchWeather(); // רענון ידני גם למזג האוויר
+            fetchWeather();
             showToast("מרענן נתונים...");
         });
 
-        // Fullscreen Logic
         document.getElementById('fullscreenBtn').addEventListener('click', () => {
             if (!document.fullscreenEnabled) {
                 showToast("מצב מסך מלא חסום בסביבה זו.");
@@ -1267,9 +1306,9 @@
         // --- Initialization ---
 
         fetchDatesAndZmanim();
-        fetchWeather(); // הפעלה ראשונה של מזג אוויר
-        setInterval(updateClock, 1000); // שעון רץ כל שנייה
-        setInterval(fetchWeather, 30 * 60 * 1000); // רענון מזג אוויר כל חצי שעה
+        fetchWeather(); 
+        setInterval(updateClock, 1000); 
+        setInterval(fetchWeather, 30 * 60 * 1000); 
         updateClock(); 
 
     </script>
