@@ -30,7 +30,7 @@
             background-color: #242424;
             border-radius: 9999px;
             padding: 1.5vh 3vw;
-            font-size: min(4vw, 8vh);
+            font-size: min(5vw, 10vh);
             font-weight: 500;
             color: #d1d5db;
             white-space: nowrap;
@@ -80,7 +80,7 @@
 
         /* Adjustments for smaller screens */
         @media (max-width: 768px) {
-            .date-pill { font-size: min(6vw, 10vh); padding: 0.5rem 1.5rem; }
+            .date-pill { font-size: min(7vw, 12vh); padding: 0.5rem 1.5rem; }
             .clock-display { font-size: min(24vw, 35vh); }
             .zmanim-text { font-size: min(9vw, 12vh); }
             #zmanimNormal { flex-direction: column; gap: 0.5rem; }
@@ -129,7 +129,11 @@
         </div>
 
         <!-- Shabbat / Holiday Times (Only shown on relevant days) -->
-        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400" style="font-size: min(5vw, 10vh); font-weight: 700;">
+        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400 zmanim-text">
+        </div>
+
+        <!-- Reminders (Alternating with Zmanim) -->
+        <div id="zmanimReminders" class="hidden justify-center items-center gap-6 zmanim-text text-green-400 text-center flex-wrap">
         </div>
 
         <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
@@ -255,6 +259,23 @@
                     <hr class="border-gray-600 my-4">
                     <h4 class="text-sm text-gray-400 mb-2">הודעות פעילות במערכת:</h4>
                     <div id="announcementsList" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        <!-- Items injected here via JS -->
+                    </div>
+                </div>
+
+                <!-- Reminders Settings -->
+                <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
+                    <h3 class="text-xl font-bold mb-3 text-white flex items-center gap-2">
+                        <i data-lucide="list-todo" class="w-5 h-5 text-green-400"></i> תזכורות מתחלפות (יעלה ויבוא, ברכנו וכד')
+                    </h3>
+                    <p class="text-sm text-gray-400 mb-3">תזכורות פעילות יתחלפו בתצוגה למטה עם זמני היום (כל כמה שניות).</p>
+                    <div class="flex gap-2 mb-4">
+                        <input type="text" id="newReminderText" class="flex-grow bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-green-500 transition-colors" placeholder="הכנס תזכורת (לדוגמה: משיב הרוח ומוריד הגשם)">
+                        <button id="addReminderBtn" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 whitespace-nowrap">
+                            <i data-lucide="plus" class="w-4 h-4"></i> הוסף
+                        </button>
+                    </div>
+                    <div id="remindersListEl" class="space-y-2 max-h-40 overflow-y-auto custom-scrollbar pr-2">
                         <!-- Items injected here via JS -->
                     </div>
                 </div>
@@ -394,6 +415,17 @@
                         }
                     }
 
+                    // סנכרון תזכורות
+                    if (data.reminders !== undefined) {
+                        const cloudRemindersStr = JSON.stringify(data.reminders);
+                        const localRemindersStr = JSON.stringify(remindersList);
+                        if (cloudRemindersStr !== localRemindersStr) {
+                            remindersList = data.reminders;
+                            localStorage.setItem('zmanimReminders', cloudRemindersStr);
+                            needsRefresh = true;
+                        }
+                    }
+
                     if (data.customZmanim) {
                         const currentLocal = localStorage.getItem('customZmanim');
                         const cloudDataStr = JSON.stringify(data.customZmanim);
@@ -428,6 +460,7 @@
                     countdownMinutes: countdownMinutes,
                     globalSunsetOffset: globalSunsetOffset,
                     announcements: announcementsList, // שומר את כל רשימת ההודעות
+                    reminders: remindersList, // שומר את התזכורות
                     customZmanim: customZmanim,
                     lastUpdated: new Date().toISOString()
                 }, { merge: true });
@@ -446,6 +479,8 @@
         let announcementsList = JSON.parse(localStorage.getItem('smartAnnouncements')) || [];
         let editingAnnId = null;
 
+        let remindersList = JSON.parse(localStorage.getItem('zmanimReminders')) || [];
+
         let lastFetchedDateString = "";
         let toastTimeout;
         let hasShabbatTimes = false;
@@ -462,6 +497,7 @@
         const zmanimCountdownEl = document.getElementById('zmanimCountdown');
         const netzTimeDisplayEl = document.getElementById('netzTimeDisplay');
         const shabbatTimesEl = document.getElementById('shabbatTimes');
+        const zmanimRemindersEl = document.getElementById('zmanimReminders');
 
         const announcementOverlay = document.getElementById('announcementOverlay');
         const announcementTextDisplay = document.getElementById('announcementTextDisplay');
@@ -483,6 +519,10 @@
         const cancelEditAnnBtn = document.getElementById('cancelEditAnnBtn');
         const actionButtonsEl = document.getElementById('actionButtons');
         
+        const newReminderText = document.getElementById('newReminderText');
+        const addReminderBtn = document.getElementById('addReminderBtn');
+        const remindersListElWrapper = document.getElementById('remindersListEl');
+
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
         // --- Inactivity Hide Logic ---
@@ -1016,6 +1056,10 @@
                     clockEl.classList.remove('sunrise-color');
                     
                     zmanimNormalEl.classList.add('hidden');
+                    shabbatTimesEl.classList.add('hidden');
+                    shabbatTimesEl.classList.remove('flex');
+                    zmanimRemindersEl.classList.add('hidden');
+                    zmanimRemindersEl.classList.remove('flex');
                     zmanimCountdownEl.classList.remove('hidden');
                     return;
                 }
@@ -1028,6 +1072,8 @@
                     zmanimNormalEl.classList.add('hidden');
                     shabbatTimesEl.classList.add('hidden');
                     shabbatTimesEl.classList.remove('flex');
+                    zmanimRemindersEl.classList.add('hidden');
+                    zmanimRemindersEl.classList.remove('flex');
                     zmanimCountdownEl.classList.remove('hidden');
                     return; 
                 }
@@ -1035,16 +1081,34 @@
 
             clockEl.innerText = formatTimeHMS(now);
             clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
-            
-            zmanimNormalEl.classList.remove('hidden');
             zmanimCountdownEl.classList.add('hidden');
             
-            if (hasShabbatTimes) {
+            // מנגנון החלפת תצוגה תחתית (זמנים / תזכורות / שבת)
+            const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
+            
+            zmanimNormalEl.classList.add('hidden');
+            shabbatTimesEl.classList.add('hidden');
+            shabbatTimesEl.classList.remove('flex');
+            zmanimRemindersEl.classList.add('hidden');
+            zmanimRemindersEl.classList.remove('flex');
+
+            let availableSlides = ['normal'];
+            if (hasShabbatTimes) availableSlides.push('shabbat');
+            if (activeReminders.length > 0) availableSlides.push('reminders');
+
+            const slideDuration = 6; // שניות לכל שקופית
+            const currentSlideIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableSlides.length;
+            const currentSlide = availableSlides[currentSlideIndex];
+
+            if (currentSlide === 'normal') {
+                zmanimNormalEl.classList.remove('hidden');
+            } else if (currentSlide === 'shabbat') {
                 shabbatTimesEl.classList.remove('hidden');
                 shabbatTimesEl.classList.add('flex');
-            } else {
-                shabbatTimesEl.classList.add('hidden');
-                shabbatTimesEl.classList.remove('flex');
+            } else if (currentSlide === 'reminders') {
+                zmanimRemindersEl.innerHTML = activeReminders.join(' <span class="divider-color mx-4">|</span> ');
+                zmanimRemindersEl.classList.remove('hidden');
+                zmanimRemindersEl.classList.add('flex');
             }
         }
 
@@ -1240,6 +1304,7 @@
             modal.classList.remove('hidden');
             loadTableData(); 
             renderAnnouncementsUI();
+            renderRemindersUI();
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
@@ -1284,6 +1349,68 @@
                 }
             }
         });
+
+        // --- Reminders Logic ---
+        addReminderBtn.addEventListener('click', () => {
+            const text = newReminderText.value.trim();
+            if (!text) return;
+            remindersList.push({ id: Date.now().toString(), text, active: true });
+            newReminderText.value = '';
+            saveReminders();
+            renderRemindersUI();
+        });
+
+        function renderRemindersUI() {
+            remindersListElWrapper.innerHTML = '';
+            if (remindersList.length === 0) {
+                remindersListElWrapper.innerHTML = '<div class="text-gray-500 text-sm">אין תזכורות מוגדרות.</div>';
+                return;
+            }
+
+            remindersList.forEach(rem => {
+                const el = document.createElement('div');
+                el.className = "flex justify-between items-center bg-[#1e1e1e] p-2 rounded-lg border border-gray-600 transition-colors";
+                el.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <label class="relative inline-flex items-center cursor-pointer" title="הפעל/כבה תזכורת">
+                            <input type="checkbox" class="sr-only peer toggle-reminder-btn" data-id="${rem.id}" ${rem.active ? 'checked' : ''}>
+                            <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                        </label>
+                        <span class="text-gray-200 ${rem.active ? 'font-bold text-white' : 'opacity-50'}">${rem.text}</span>
+                    </div>
+                    <button class="text-gray-400 hover:text-red-400 transition-colors delete-reminder-btn bg-gray-800 p-1.5 rounded-md" data-id="${rem.id}" title="מחק">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                remindersListElWrapper.appendChild(el);
+            });
+            lucide.createIcons();
+
+            document.querySelectorAll('.toggle-reminder-btn').forEach(btn => {
+                btn.addEventListener('change', (e) => {
+                    const id = e.target.getAttribute('data-id');
+                    const rem = remindersList.find(r => r.id === id);
+                    if (rem) rem.active = e.target.checked;
+                    saveReminders();
+                    renderRemindersUI();
+                });
+            });
+
+            document.querySelectorAll('.delete-reminder-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const id = e.currentTarget.getAttribute('data-id');
+                    remindersList = remindersList.filter(r => r.id !== id);
+                    saveReminders();
+                    renderRemindersUI();
+                });
+            });
+        }
+
+        function saveReminders() {
+            localStorage.setItem('zmanimReminders', JSON.stringify(remindersList));
+            syncToCloud();
+            updateClock();
+        }
 
         // --- Initialization ---
 
