@@ -119,7 +119,7 @@
     </div>
 
     <!-- Zmanim Footer Container -->
-    <div class="flex flex-col items-center justify-center h-[12vh] md:h-[15vh] w-full flex-shrink-0">
+    <div class="flex flex-col items-center justify-center h-[12vh] md:h-[15vh] w-full flex-shrink-0 mb-12 md:mb-6">
         
         <!-- Normal Zmanim (Sunrise / Sunset) -->
         <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
@@ -133,7 +133,7 @@
         </div>
 
         <!-- Reminders (Alternating with Zmanim) -->
-        <div id="zmanimReminders" class="hidden justify-center items-center gap-6 zmanim-text text-green-400 text-center flex-wrap">
+        <div id="zmanimReminders" class="hidden justify-center items-center gap-6 zmanim-text text-green-400 text-center flex-nowrap whitespace-nowrap">
         </div>
 
         <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
@@ -1095,12 +1095,29 @@
             let availableSlides = [{type: 'normal'}];
             if (hasShabbatTimes) availableSlides.push({type: 'shabbat'});
             
-            // חלוקת תזכורות לפי גודל מסך (במחשב/טלוויזיה נציג 3 יחד, בנייד נציג 1)
-            const maxItemsPerSlide = window.innerWidth < 768 ? 1 : 3;
+            // חלוקת תזכורות לפי אורך הטקסט כדי למנוע ירידת שורה (בערך 20 תווים בנייד, 60 במסך גדול)
+            const maxCharsPerSlide = window.innerWidth < 768 ? 20 : 60;
+            let currentChunk = [];
+            let currentLen = 0;
+
+            activeReminders.forEach(rem => {
+                if (currentChunk.length === 0) {
+                    currentChunk.push(rem);
+                    currentLen = rem.length;
+                } else if (currentLen + rem.length + 3 <= maxCharsPerSlide) {
+                    currentChunk.push(rem);
+                    currentLen += rem.length + 3; // מוסיף מקום משוער לקו המפריד
+                } else {
+                    const chunkHtml = currentChunk.join(' <span class="divider-color mx-4">|</span> ');
+                    availableSlides.push({type: 'reminder', content: chunkHtml});
+                    currentChunk = [rem];
+                    currentLen = rem.length;
+                }
+            });
             
-            for (let i = 0; i < activeReminders.length; i += maxItemsPerSlide) {
-                const chunk = activeReminders.slice(i, i + maxItemsPerSlide).join(' <span class="divider-color mx-4">|</span> ');
-                availableSlides.push({type: 'reminder', content: chunk});
+            if (currentChunk.length > 0) {
+                const chunkHtml = currentChunk.join(' <span class="divider-color mx-4">|</span> ');
+                availableSlides.push({type: 'reminder', content: chunkHtml});
             }
 
             const slideDuration = 6; // שניות לכל שקופית
