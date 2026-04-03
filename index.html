@@ -62,14 +62,13 @@
 
         /* Scrolling Marquee Animation for Reminders */
         @keyframes scrollRTL {
-            0% { transform: translate3d(-100vw, 0, 0); }
-            100% { transform: translate3d(100%, 0, 0); }
+            0% { transform: translateX(0); }
+            100% { transform: translateX(50%); }
         }
         .animate-scroll {
-            display: inline-block;
-            animation-name: scrollRTL;
-            animation-timing-function: linear;
-            animation-iteration-count: infinite;
+            display: flex;
+            width: max-content;
+            animation: scrollRTL linear infinite;
         }
 
         /* Modal styling */
@@ -101,10 +100,10 @@
         }
     </style>
 </head>
-<body class="h-screen w-screen flex flex-col justify-between p-6 md:p-10 relative">
+<body class="h-screen w-screen flex flex-col justify-between p-4 md:p-6 relative overflow-hidden">
 
     <!-- Top Bar: Settings, Refresh, Fullscreen, and Dates -->
-    <div class="relative w-full flex justify-center items-start">
+    <div class="relative w-full flex justify-center items-start mt-2">
         <!-- Action Buttons -->
         <div id="actionButtons" class="flex gap-4 z-[60] absolute left-0 top-0 items-center transition-opacity duration-500">
             <button id="fullscreenBtn" class="text-gray-400 hover:text-white transition-colors" title="מסך מלא">
@@ -119,23 +118,23 @@
         </div>
 
         <!-- Dates -->
-        <div class="flex flex-nowrap justify-center gap-2 md:gap-4 items-center mt-20 md:mt-2 w-full">
+        <div class="flex flex-nowrap justify-center gap-2 md:gap-4 items-center mt-12 md:mt-2 w-full">
             <div id="hebrewDate" class="date-pill">טוען...</div>
             <div id="gregDate" class="date-pill">טוען...</div>
         </div>
     </div>
 
     <!-- Main Clock Container -->
-    <!-- הוספנו mt-[5vh] כדי להזיז את השעון מעט למטה -->
-    <div class="flex flex-col items-center justify-center flex-grow relative w-full mt-[5vh]">
+    <!-- הוספנו mb-[5vh] md:mb-[10vh] כדי להרים את השעון למעלה -->
+    <div class="flex flex-col items-center justify-center flex-grow relative w-full mb-[5vh] md:mb-[10vh]">
         <div id="clock" class="clock-display transition-opacity duration-500">00:00:00</div>
     </div>
 
     <!-- Zmanim Footer Container -->
-    <div id="zmanimFooter" class="flex flex-col items-center justify-start h-[16vh] md:h-[20vh] w-full flex-shrink-0 mb-8 md:mb-4 gap-2 overflow-hidden">
+    <div id="zmanimFooter" class="flex flex-col items-center justify-center w-full flex-shrink-0 mb-12 md:mb-10 gap-6 md:gap-10 overflow-hidden">
         
         <!-- ROW 1: TIMES (Alternating) -->
-        <div id="timesWrapper" class="flex items-center justify-center w-full h-1/2">
+        <div id="timesWrapper" class="flex items-center justify-center w-full">
             <!-- Normal Zmanim (Sunrise / Sunset) -->
             <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
                 <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
@@ -154,8 +153,8 @@
         </div>
 
         <!-- ROW 2: REMINDERS -->
-        <div id="remindersWrapper" class="hidden items-center justify-center w-full h-1/2 overflow-hidden relative">
-            <div id="zmanimReminders" class="zmanim-text text-green-400 text-center whitespace-nowrap w-full transition-colors">
+        <div id="remindersWrapper" class="hidden items-center justify-center w-full overflow-hidden relative" style="mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 2%, black 98%, transparent);">
+            <div id="zmanimReminders" class="zmanim-text text-green-400 text-center whitespace-nowrap w-full transition-colors" data-text="">
             </div>
         </div>
 
@@ -172,7 +171,7 @@
     </div>
 
     <!-- Weather Widget (Bottom Left) -->
-    <div id="weatherWidget" class="absolute bottom-6 left-6 md:bottom-10 md:left-10 flex items-center gap-3 bg-[#242424]/80 backdrop-blur-md border border-gray-700/50 p-3 rounded-2xl shadow-lg opacity-0 transition-opacity duration-1000">
+    <div id="weatherWidget" class="absolute bottom-2 left-2 md:bottom-4 md:left-4 flex items-center gap-3 bg-[#242424]/80 backdrop-blur-md border border-gray-700/50 p-3 rounded-2xl shadow-lg opacity-0 transition-opacity duration-1000">
         <div id="weatherIconContainer">
             <!-- Icon injected by JS -->
         </div>
@@ -1123,7 +1122,7 @@
             }
 
             // ==========================================
-            // ניהול שורה 2: התזכורות ואפקט הגלילה (Marquee)
+            // ניהול שורה 2: התזכורות ואפקט הגלילה הרציף (Seamless Marquee)
             // ==========================================
             const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
             if (activeReminders.length > 0) {
@@ -1132,30 +1131,39 @@
                 
                 const allRemindersText = activeReminders.join(' <span class="divider-color mx-4">|</span> ');
                 
-                // עדכון הטקסט רק אם הוא השתנה כדי לא לפגוע באנימציה
-                if (zmanimRemindersEl.innerHTML !== allRemindersText) {
-                    zmanimRemindersEl.innerHTML = allRemindersText;
-                }
-
-                // בדיקה אם הטקסט ארוך מהמסך - אם כן, מפעילים גלילה (Marquee)
-                if (zmanimRemindersEl.scrollWidth > remindersWrapper.clientWidth) {
-                    if (!zmanimRemindersEl.classList.contains('animate-scroll')) {
-                        zmanimRemindersEl.classList.add('animate-scroll');
-                        zmanimRemindersEl.classList.remove('text-center', 'w-full');
-                    }
-                    // התאמת מהירות הגלילה באופן דינמי לאורך הטקסט
-                    const speed = 100; // פיקסלים לשנייה
-                    const dist = window.innerWidth + zmanimRemindersEl.scrollWidth;
-                    zmanimRemindersEl.style.animationDuration = `${dist / speed}s`;
-                } else {
-                    // הטקסט נכנס בשורה אחת, פשוט נמרכז אותו
+                // עדכון הטקסט רק אם הוא השתנה כדי לא לפגוע באנימציה רצה
+                if (zmanimRemindersEl.getAttribute('data-text') !== allRemindersText) {
+                    zmanimRemindersEl.setAttribute('data-text', allRemindersText);
+                    zmanimRemindersEl.innerHTML = allRemindersText; 
                     zmanimRemindersEl.classList.remove('animate-scroll');
-                    zmanimRemindersEl.classList.add('text-center', 'w-full');
                     zmanimRemindersEl.style.animationDuration = '';
+                    
+                    // מתן השהיה קלה לדפדפן כדי לחשב את הרוחב החדש
+                    setTimeout(() => {
+                        if (zmanimRemindersEl.scrollWidth > remindersWrapper.clientWidth) {
+                            // הטקסט ארוך מהמסך - מפעילים גלילה חלקה ורציפה (לופ)
+                            zmanimRemindersEl.classList.add('animate-scroll');
+                            zmanimRemindersEl.classList.remove('text-center', 'w-full');
+                            
+                            // שכפול הטקסט פעמיים כדי שהלופ יהיה מושלם וללא רווחים
+                            const separator = ' <span class="divider-color mx-4">|</span> ';
+                            zmanimRemindersEl.innerHTML = `<span class="px-8">${allRemindersText}${separator}</span><span class="px-8">${allRemindersText}${separator}</span>`;
+                            
+                            // התאמת מהירות הגלילה באופן דינמי לאורך הטקסט (כ-80 פיקסלים לשנייה)
+                            const speed = 80; 
+                            const dist = zmanimRemindersEl.scrollWidth / 2; // מרחק ההזזה הוא חצי מהרוחב הכולל (כלומר סט אחד)
+                            zmanimRemindersEl.style.animationDuration = `${dist / speed}s`;
+                        } else {
+                            // הטקסט נכנס בשורה אחת, ממרכזים אותו ללא גלילה
+                            zmanimRemindersEl.classList.remove('animate-scroll');
+                            zmanimRemindersEl.classList.add('text-center', 'w-full');
+                        }
+                    }, 50);
                 }
             } else {
                 remindersWrapper.classList.add('hidden');
                 remindersWrapper.classList.remove('flex');
+                zmanimRemindersEl.setAttribute('data-text', ''); // איפוס
             }
         }
 
