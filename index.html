@@ -130,11 +130,11 @@
     </div>
 
     <!-- Zmanim & Reminders Footer Container -->
-    <!-- מוצמד למטה עם רווח כדי להשאיר מקום למזג האוויר -->
-    <div id="zmanimFooter" class="flex-shrink-0 flex flex-col items-center justify-center w-full gap-4 md:gap-8 pb-16 md:pb-12">
+    <!-- הקטנו משמעותית את ה-gap וה-padding כדי לקרב את השורות ולמנוע חיתוך למטה -->
+    <div id="zmanimFooter" class="flex-shrink-0 flex flex-col items-center justify-center w-full gap-2 md:gap-4 pb-10 md:pb-6">
         
         <!-- ROW 1: TIMES (Alternating) -->
-        <div id="timesWrapper" class="flex items-center justify-center w-full min-h-[6vh] md:min-h-[8vh]">
+        <div id="timesWrapper" class="flex items-center justify-center w-full min-h-[5vh] md:min-h-[6vh]">
             <!-- Normal Zmanim (Sunrise / Sunset) -->
             <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
                 <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
@@ -153,9 +153,9 @@
         </div>
 
         <!-- ROW 2: REMINDERS -->
-        <div id="remindersWrapper" class="hidden items-center justify-center w-full overflow-hidden relative min-h-[6vh] md:min-h-[8vh]" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+        <div id="remindersWrapper" class="hidden items-center justify-center w-full overflow-hidden relative min-h-[5vh] md:min-h-[6vh]" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
             <!-- הטקסט יוזרק לכאן דרך JS -->
-            <div id="zmanimReminders" class="zmanim-text text-green-400 w-full transition-opacity duration-300" data-text="">
+            <div id="zmanimReminders" class="zmanim-text text-green-400 w-full transition-opacity duration-300 flex-nowrap whitespace-nowrap" data-text="">
             </div>
         </div>
 
@@ -1149,15 +1149,16 @@
                         if (measureSpan && measureSpan.scrollWidth > remindersWrapper.clientWidth) {
                             // הטקסט ארוך מהמסך - מפעילים גלילה חלקה ורציפה
                             zmanimRemindersEl.classList.remove('text-center', 'w-full', 'block', 'opacity-0');
-                            zmanimRemindersEl.classList.add('animate-scroll', 'flex', 'w-max', 'opacity-100');
+                            zmanimRemindersEl.classList.add('animate-scroll', 'flex', 'flex-nowrap', 'w-max', 'opacity-100');
                             
                             // שכפול הטקסט פעמיים בתוך תאים ליצירת הרצף (Seamless Loop)
                             const separator = ' <span class="divider-color mx-4">|</span> ';
                             const fullContent = allRemindersText + separator;
                             
+                            // הוספנו whitespace-nowrap מפורש גם כאן כדי למנוע כל אפשרות של ירידת שורה בתוך הלופ
                             zmanimRemindersEl.innerHTML = `
-                                <div class="flex-shrink-0 px-8 flex items-center justify-center">${fullContent}</div>
-                                <div class="flex-shrink-0 px-8 flex items-center justify-center">${fullContent}</div>
+                                <div class="flex-shrink-0 px-8 flex items-center justify-center whitespace-nowrap">${fullContent}</div>
+                                <div class="flex-shrink-0 px-8 flex items-center justify-center whitespace-nowrap">${fullContent}</div>
                             `;
                             
                             // התאמת מהירות הגלילה (כ-70 פיקסלים לשנייה)
