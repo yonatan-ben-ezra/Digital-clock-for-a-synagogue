@@ -125,16 +125,16 @@
 
     <!-- Main Clock Container -->
     <!-- flex-grow גורם לשעון לקחת את המקום הפנוי באמצע, בלי לדחוף את השאר החוצה -->
-    <div class="flex-grow flex flex-col items-center justify-center w-full pt-[4vh] md:pt-[6vh] pb-8 md:pb-0">
+    <div class="flex-grow flex flex-col items-center justify-center w-full pt-[4vh] md:pt-[6vh] pb-2 md:pb-0">
         <div id="clock" class="clock-display transition-opacity duration-500">00:00:00</div>
     </div>
 
     <!-- Zmanim & Reminders Footer Container -->
     <!-- הקטנו משמעותית את ה-gap וה-padding כדי לקרב את השורות ולמנוע חיתוך למטה -->
-    <div id="zmanimFooter" class="flex-shrink-0 flex flex-col items-center justify-center w-full gap-0 md:gap-1 pb-10 md:pb-6">
+    <div id="zmanimFooter" class="flex-shrink-0 flex flex-col items-center justify-center w-full gap-0 pb-16 md:pb-12">
         
         <!-- ROW 1: TIMES (Alternating) -->
-        <div id="timesWrapper" class="flex items-center justify-center w-full min-h-[5vh] md:min-h-[6vh]">
+        <div id="timesWrapper" class="flex items-center justify-center w-full">
             <!-- Normal Zmanim (Sunrise / Sunset) -->
             <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
                 <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
@@ -153,7 +153,7 @@
         </div>
 
         <!-- ROW 2: REMINDERS -->
-        <div id="remindersWrapper" class="hidden items-center justify-center w-full overflow-hidden relative min-h-[5vh] md:min-h-[6vh]" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
+        <div id="remindersWrapper" class="hidden items-center justify-center w-full overflow-hidden relative" style="mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent); -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);">
             <!-- הטקסט יוזרק לכאן דרך JS -->
             <div id="zmanimReminders" class="zmanim-text text-green-400 w-full transition-opacity duration-300 flex-nowrap whitespace-nowrap" data-text="">
             </div>
