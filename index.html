@@ -1111,63 +1111,64 @@
             // --------------------------------------
 
             // טיפול במצב של ספירה לאחור לנץ החמה
-            if (currentSunriseDate && countdownMinutes > 0) {
-                const diffMs = currentSunriseDate.getTime() - now.getTime();
-                const diffSeconds = diffMs / 1000;
-                const diffMinutes = diffSeconds / 60;
+            let isCountdownActive = false;
+            let diffMs = 0, diffSeconds = 0, diffMinutes = 0;
 
+            if (currentSunriseDate && countdownMinutes > 0) {
+                diffMs = currentSunriseDate.getTime() - now.getTime();
+                diffSeconds = diffMs / 1000;
+                diffMinutes = diffSeconds / 60;
+
+                if ((diffSeconds <= 0 && diffSeconds > -10) || (diffMinutes > 0 && diffMinutes <= countdownMinutes)) {
+                    isCountdownActive = true;
+                }
+            }
+
+            if (isCountdownActive) {
                 if (diffSeconds <= 0 && diffSeconds > -10) {
                     clockEl.innerText = "00:00";
                     clockEl.classList.add('countdown-color', 'blink');
                     clockEl.classList.remove('sunrise-color');
-                    
-                    zmanimNormalEl.classList.add('hidden');
-                    shabbatTimesEl.classList.add('hidden');
-                    shabbatTimesEl.classList.remove('flex');
-                    remindersWrapper.classList.add('hidden');
-                    remindersWrapper.classList.remove('flex');
-                    zmanimCountdownEl.classList.remove('hidden');
-                    return;
-                }
-
-                if (diffMinutes > 0 && diffMinutes <= countdownMinutes) {
+                } else {
                     clockEl.innerText = formatDiffToHMS(diffMs);
                     clockEl.classList.add('countdown-color');
                     clockEl.classList.remove('blink', 'sunrise-color');
-                    
-                    zmanimNormalEl.classList.add('hidden');
-                    shabbatTimesEl.classList.add('hidden');
-                    shabbatTimesEl.classList.remove('flex');
-                    remindersWrapper.classList.add('hidden');
-                    remindersWrapper.classList.remove('flex');
-                    zmanimCountdownEl.classList.remove('hidden');
-                    return; 
                 }
-            }
-
-            // תצוגת שעון רגיל
-            clockEl.innerText = formatTimeHMS(now);
-            clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
-            zmanimCountdownEl.classList.add('hidden');
-            
-            // ==========================================
-            // ניהול שורה 1: חילוף זמני היום וזמני שבת
-            // ==========================================
-            let availableTimesSlides = ['normal'];
-            if (hasShabbatTimes) availableTimesSlides.push('shabbat');
-            
-            const slideDuration = 6; // כל כמה שניות מתחלפת התצוגה של הזמנים
-            const currentTimesIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableTimesSlides.length;
-
-            zmanimNormalEl.classList.add('hidden');
-            shabbatTimesEl.classList.add('hidden');
-            shabbatTimesEl.classList.remove('flex');
-
-            if (availableTimesSlides[currentTimesIndex] === 'normal') {
-                zmanimNormalEl.classList.remove('hidden');
+                
+                zmanimNormalEl.classList.add('hidden');
+                zmanimNormalEl.classList.remove('flex');
+                shabbatTimesEl.classList.add('hidden');
+                shabbatTimesEl.classList.remove('flex');
+                zmanimCountdownEl.classList.remove('hidden');
+                zmanimCountdownEl.classList.add('flex');
             } else {
-                shabbatTimesEl.classList.remove('hidden');
-                shabbatTimesEl.classList.add('flex');
+                // תצוגת שעון רגיל
+                clockEl.innerText = formatTimeHMS(now);
+                clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
+                zmanimCountdownEl.classList.add('hidden');
+                zmanimCountdownEl.classList.remove('flex');
+                
+                // ==========================================
+                // ניהול שורה 1: חילוף זמני היום וזמני שבת
+                // ==========================================
+                let availableTimesSlides = ['normal'];
+                if (hasShabbatTimes) availableTimesSlides.push('shabbat');
+                
+                const slideDuration = 6; // כל כמה שניות מתחלפת התצוגה של הזמנים
+                const currentTimesIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableTimesSlides.length;
+
+                zmanimNormalEl.classList.add('hidden');
+                zmanimNormalEl.classList.remove('flex');
+                shabbatTimesEl.classList.add('hidden');
+                shabbatTimesEl.classList.remove('flex');
+
+                if (availableTimesSlides[currentTimesIndex] === 'normal') {
+                    zmanimNormalEl.classList.remove('hidden');
+                    zmanimNormalEl.classList.add('flex');
+                } else {
+                    shabbatTimesEl.classList.remove('hidden');
+                    shabbatTimesEl.classList.add('flex');
+                }
             }
 
             // ==========================================
