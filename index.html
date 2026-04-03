@@ -491,6 +491,10 @@
         // --- State Variables ---
         let currentSunriseDate = null;
         let currentSunsetDate = null;
+        let currentHebrewDateStr = "";
+        let nextHebrewDateStr = "";
+        let currentOmerDay = 0;
+        let nextOmerDay = 0;
         let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
         
@@ -918,6 +922,13 @@
         
         // --- API and Main Data Fetching ---
 
+        function getOmerDay(hm, hd) {
+            if (hm === 'Nisan' && hd >= 16) return hd - 15;
+            if (hm === 'Iyyar') return hd + 15;
+            if (hm === 'Sivan' && hd <= 5) return hd + 44;
+            return 0;
+        }
+
         async function fetchDatesAndZmanim() {
             try {
                 const now = new Date();
@@ -953,13 +964,24 @@
                 sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
                 netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
 
-                const hebDateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`);
-                const hebDateData = await hebDateRes.json();
-                
-                const cleanHebrew = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
-                const weekdayName = "יום " + hebrewDaysArr[now.getDay()];
+                const tomorrow = new Date(now);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = formatDate(tomorrow);
 
-                hebrewDateEl.innerText = `${weekdayName}, ${cleanHebrew}`;
+                const [hebDateRes, hebTomorrowRes] = await Promise.all([
+                    fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`),
+                    fetch(`https://www.hebcal.com/converter?cfg=json&date=${tomorrowStr}&g2h=1&strict=1`)
+                ]);
+                
+                const hebDateData = await hebDateRes.json();
+                const hebTomorrowData = await hebTomorrowRes.json();
+                
+                currentHebrewDateStr = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+                nextHebrewDateStr = hebTomorrowData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+
+                currentOmerDay = getOmerDay(hebDateData.hm, hebDateData.hd);
+                nextOmerDay = getOmerDay(hebTomorrowData.hm, hebTomorrowData.hd);
+
                 gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
                 try {
@@ -1018,6 +1040,31 @@
             const todayStr = formatDate(now);
             if (todayStr !== lastFetchedDateString) {
                 fetchDatesAndZmanim();
+            }
+
+            // -- עדכון תצוגת התאריך העברי (בדיקת 20 דקות אחרי שקיעה) --
+            let activeOmerDay = 0;
+            if (currentHebrewDateStr && currentSunsetDate && nextHebrewDateStr) {
+                const sunsetPlus20 = new Date(currentSunsetDate.getTime() + 20 * 60000);
+                let dayPrefix = "יום " + hebrewDaysArr[now.getDay()];
+                let displayHebrewDate = currentHebrewDateStr;
+                activeOmerDay = currentOmerDay;
+                
+                // אם השעה הנוכחית היא אחרי שקיעה + 20 דקות (ועד חצות הלילה שאז היום ממילא מתחלף)
+                if (now.getTime() >= sunsetPlus20.getTime()) {
+                    if (now.getDay() === 5) {
+                        // אם היום יום שישי, נכתוב "ליל שבת"
+                        dayPrefix = "ליל שבת";
+                    } else {
+                        // בשאר הימים נכתוב "אור ל..."
+                        const nextDayIndex = (now.getDay() + 1) % 7;
+                        dayPrefix = "אור ל" + hebrewDaysArr[nextDayIndex];
+                    }
+                    displayHebrewDate = nextHebrewDateStr;
+                    activeOmerDay = nextOmerDay;
+                }
+                
+                hebrewDateEl.innerText = `${dayPrefix}, ${displayHebrewDate}`;
             }
 
             // -- Check Smart Announcements --
@@ -1127,6 +1174,12 @@
             // ניהול שורה 2: התזכורות ואפקט הגלילה הרציף (Seamless Marquee)
             // ==========================================
             const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
+            
+            // הוספת ספירת העומר לתחילת התזכורות אם רלוונטי
+            if (activeOmerDay > 0) {
+                activeReminders.unshift(`ספירת העומר: היום ${activeOmerDay}`);
+            }
+
             if (activeReminders.length > 0) {
                 remindersWrapper.classList.remove('hidden');
                 remindersWrapper.classList.add('flex');
