@@ -60,6 +60,18 @@
             animation: blinker 1s linear infinite;
         }
 
+        /* Scrolling Marquee Animation for Reminders */
+        @keyframes scrollRTL {
+            0% { transform: translate3d(-100vw, 0, 0); }
+            100% { transform: translate3d(100%, 0, 0); }
+        }
+        .animate-scroll {
+            display: inline-block;
+            animation-name: scrollRTL;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
         /* Modal styling */
         .modal-bg {
             backdrop-filter: blur(8px);
@@ -114,31 +126,37 @@
     </div>
 
     <!-- Main Clock Container -->
-    <div class="flex flex-col items-center justify-center flex-grow relative w-full">
+    <!-- הוספנו mt-[5vh] כדי להזיז את השעון מעט למטה -->
+    <div class="flex flex-col items-center justify-center flex-grow relative w-full mt-[5vh]">
         <div id="clock" class="clock-display transition-opacity duration-500">00:00:00</div>
     </div>
 
     <!-- Zmanim Footer Container -->
-    <div class="flex flex-col items-center justify-center h-[12vh] md:h-[15vh] w-full flex-shrink-0 mb-12 md:mb-6">
+    <div id="zmanimFooter" class="flex flex-col items-center justify-start h-[16vh] md:h-[20vh] w-full flex-shrink-0 mb-8 md:mb-4 gap-2 overflow-hidden">
         
-        <!-- Normal Zmanim (Sunrise / Sunset) -->
-        <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
-            <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
-            <div class="divider-color">|</div>
-            <div class="sunset-color">שקיעה: <span id="sunsetTime">--:--</span></div>
+        <!-- ROW 1: TIMES (Alternating) -->
+        <div id="timesWrapper" class="flex items-center justify-center w-full h-1/2">
+            <!-- Normal Zmanim (Sunrise / Sunset) -->
+            <div id="zmanimNormal" class="flex flex-row justify-center items-center gap-6 zmanim-text">
+                <div class="sunrise-color">זריחה: <span id="sunriseTime">--:--</span></div>
+                <div class="divider-color">|</div>
+                <div class="sunset-color">שקיעה: <span id="sunsetTime">--:--</span></div>
+            </div>
+
+            <!-- Shabbat / Holiday Times (Only shown on relevant days) -->
+            <div id="shabbatTimes" class="hidden justify-center items-center gap-6 text-yellow-400 zmanim-text">
+            </div>
+
+            <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
+            <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
+                <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
+            </div>
         </div>
 
-        <!-- Shabbat / Holiday Times (Only shown on relevant days) -->
-        <div id="shabbatTimes" class="hidden justify-center items-center gap-6 mt-2 md:mt-4 text-yellow-400 zmanim-text">
-        </div>
-
-        <!-- Reminders (Alternating with Zmanim) -->
-        <div id="zmanimReminders" class="hidden justify-center items-center gap-6 zmanim-text text-green-400 text-center flex-nowrap whitespace-nowrap">
-        </div>
-
-        <!-- Countdown Zmanim (Replaces normal zmanim during countdown) -->
-        <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
-            <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
+        <!-- ROW 2: REMINDERS -->
+        <div id="remindersWrapper" class="hidden items-center justify-center w-full h-1/2 overflow-hidden relative">
+            <div id="zmanimReminders" class="zmanim-text text-green-400 text-center whitespace-nowrap w-full transition-colors">
+            </div>
         </div>
 
     </div>
@@ -492,6 +510,9 @@
         const hebrewDateEl = document.getElementById('hebrewDate');
         const sunriseTimeEl = document.getElementById('sunriseTime');
         const sunsetTimeEl = document.getElementById('sunsetTime');
+        
+        const timesWrapper = document.getElementById('timesWrapper');
+        const remindersWrapper = document.getElementById('remindersWrapper');
         
         const zmanimNormalEl = document.getElementById('zmanimNormal');
         const zmanimCountdownEl = document.getElementById('zmanimCountdown');
@@ -975,11 +996,7 @@
                                 html += `<div>צאת שבת/חג: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
                             }
                             shabbatTimesEl.innerHTML = html;
-                            shabbatTimesEl.classList.remove('hidden');
-                            shabbatTimesEl.classList.add('flex');
                         } else {
-                            shabbatTimesEl.classList.add('hidden');
-                            shabbatTimesEl.classList.remove('flex');
                             shabbatTimesEl.innerHTML = '';
                         }
                     }
@@ -1003,37 +1020,37 @@
             }
 
             // -- Check Smart Announcements --
-        let activeAnnouncement = null;
-        const currentDayInt = now.getDay();
-        
-        for (const ann of announcementsList) {
-            // בדיקה אם ההודעה רלוונטית להיום
-            let typeMatch = false;
-            if (ann.type === 'daily') typeMatch = true;
-            else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
-            else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
-
-            if (!typeMatch) continue;
-
-            // בדיקת השעות כולל חזרות (נודניק)
-            const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
-            const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
+            let activeAnnouncement = null;
+            const currentDayInt = now.getDay();
             
-            let repeats = ann.repeatCount ? parseInt(ann.repeatCount) : 0;
-            let intervalSec = ann.repeatInterval ? parseInt(ann.repeatInterval) : 0;
-            if (ann.repeatUnit === 'minutes') intervalSec *= 60;
+            for (const ann of announcementsList) {
+                // בדיקה אם ההודעה רלוונטית להיום
+                let typeMatch = false;
+                if (ann.type === 'daily') typeMatch = true;
+                else if (ann.type === 'weekly' && ann.weeklyDays && ann.weeklyDays.includes(currentDayInt)) typeMatch = true;
+                else if (ann.type === 'date' && ann.specificDate === todayStr) typeMatch = true;
 
-            for (let i = 0; i <= repeats; i++) {
-                const currentStartMs = aStart.getTime() + (i * intervalSec * 1000);
-                const currentEndMs = currentStartMs + (ann.duration * 1000);
+                if (!typeMatch) continue;
+
+                // בדיקת השעות כולל חזרות (נודניק)
+                const [aHour, aMin, aSec] = ann.time.split(':').map(Number);
+                const aStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), aHour, aMin, aSec || 0);
                 
-                if (now.getTime() >= currentStartMs && now.getTime() < currentEndMs) {
-                    activeAnnouncement = ann;
-                    break; 
+                let repeats = ann.repeatCount ? parseInt(ann.repeatCount) : 0;
+                let intervalSec = ann.repeatInterval ? parseInt(ann.repeatInterval) : 0;
+                if (ann.repeatUnit === 'minutes') intervalSec *= 60;
+
+                for (let i = 0; i <= repeats; i++) {
+                    const currentStartMs = aStart.getTime() + (i * intervalSec * 1000);
+                    const currentEndMs = currentStartMs + (ann.duration * 1000);
+                    
+                    if (now.getTime() >= currentStartMs && now.getTime() < currentEndMs) {
+                        activeAnnouncement = ann;
+                        break; 
+                    }
                 }
+                if (activeAnnouncement) break; // מצאנו הודעה פעילה כולל החזרות
             }
-            if (activeAnnouncement) break; // מצאנו הודעה פעילה כולל החזרות
-        }
 
             if (activeAnnouncement) {
                 announcementTextDisplay.innerText = activeAnnouncement.text;
@@ -1045,6 +1062,7 @@
             }
             // --------------------------------------
 
+            // טיפול במצב של ספירה לאחור לנץ החמה
             if (currentSunriseDate && countdownMinutes > 0) {
                 const diffMs = currentSunriseDate.getTime() - now.getTime();
                 const diffSeconds = diffMs / 1000;
@@ -1058,8 +1076,8 @@
                     zmanimNormalEl.classList.add('hidden');
                     shabbatTimesEl.classList.add('hidden');
                     shabbatTimesEl.classList.remove('flex');
-                    zmanimRemindersEl.classList.add('hidden');
-                    zmanimRemindersEl.classList.remove('flex');
+                    remindersWrapper.classList.add('hidden');
+                    remindersWrapper.classList.remove('flex');
                     zmanimCountdownEl.classList.remove('hidden');
                     return;
                 }
@@ -1072,67 +1090,72 @@
                     zmanimNormalEl.classList.add('hidden');
                     shabbatTimesEl.classList.add('hidden');
                     shabbatTimesEl.classList.remove('flex');
-                    zmanimRemindersEl.classList.add('hidden');
-                    zmanimRemindersEl.classList.remove('flex');
+                    remindersWrapper.classList.add('hidden');
+                    remindersWrapper.classList.remove('flex');
                     zmanimCountdownEl.classList.remove('hidden');
                     return; 
                 }
             }
 
+            // תצוגת שעון רגיל
             clockEl.innerText = formatTimeHMS(now);
             clockEl.classList.remove('countdown-color', 'blink', 'sunrise-color');
             zmanimCountdownEl.classList.add('hidden');
             
-            // מנגנון החלפת תצוגה תחתית (זמנים / תזכורות / שבת)
-            const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
+            // ==========================================
+            // ניהול שורה 1: חילוף זמני היום וזמני שבת
+            // ==========================================
+            let availableTimesSlides = ['normal'];
+            if (hasShabbatTimes) availableTimesSlides.push('shabbat');
             
+            const slideDuration = 6; // כל כמה שניות מתחלפת התצוגה של הזמנים
+            const currentTimesIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableTimesSlides.length;
+
             zmanimNormalEl.classList.add('hidden');
             shabbatTimesEl.classList.add('hidden');
             shabbatTimesEl.classList.remove('flex');
-            zmanimRemindersEl.classList.add('hidden');
-            zmanimRemindersEl.classList.remove('flex');
 
-            let availableSlides = [{type: 'normal'}];
-            if (hasShabbatTimes) availableSlides.push({type: 'shabbat'});
-            
-            // חלוקת תזכורות לפי אורך הטקסט כדי למנוע ירידת שורה (בערך 20 תווים בנייד, 60 במסך גדול)
-            const maxCharsPerSlide = window.innerWidth < 768 ? 20 : 60;
-            let currentChunk = [];
-            let currentLen = 0;
-
-            activeReminders.forEach(rem => {
-                if (currentChunk.length === 0) {
-                    currentChunk.push(rem);
-                    currentLen = rem.length;
-                } else if (currentLen + rem.length + 3 <= maxCharsPerSlide) {
-                    currentChunk.push(rem);
-                    currentLen += rem.length + 3; // מוסיף מקום משוער לקו המפריד
-                } else {
-                    const chunkHtml = currentChunk.join(' <span class="divider-color mx-4">|</span> ');
-                    availableSlides.push({type: 'reminder', content: chunkHtml});
-                    currentChunk = [rem];
-                    currentLen = rem.length;
-                }
-            });
-            
-            if (currentChunk.length > 0) {
-                const chunkHtml = currentChunk.join(' <span class="divider-color mx-4">|</span> ');
-                availableSlides.push({type: 'reminder', content: chunkHtml});
-            }
-
-            const slideDuration = 6; // שניות לכל שקופית
-            const currentSlideIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableSlides.length;
-            const currentSlide = availableSlides[currentSlideIndex];
-
-            if (currentSlide.type === 'normal') {
+            if (availableTimesSlides[currentTimesIndex] === 'normal') {
                 zmanimNormalEl.classList.remove('hidden');
-            } else if (currentSlide.type === 'shabbat') {
+            } else {
                 shabbatTimesEl.classList.remove('hidden');
                 shabbatTimesEl.classList.add('flex');
-            } else if (currentSlide.type === 'reminder') {
-                zmanimRemindersEl.innerHTML = currentSlide.content;
-                zmanimRemindersEl.classList.remove('hidden');
-                zmanimRemindersEl.classList.add('flex');
+            }
+
+            // ==========================================
+            // ניהול שורה 2: התזכורות ואפקט הגלילה (Marquee)
+            // ==========================================
+            const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
+            if (activeReminders.length > 0) {
+                remindersWrapper.classList.remove('hidden');
+                remindersWrapper.classList.add('flex');
+                
+                const allRemindersText = activeReminders.join(' <span class="divider-color mx-4">|</span> ');
+                
+                // עדכון הטקסט רק אם הוא השתנה כדי לא לפגוע באנימציה
+                if (zmanimRemindersEl.innerHTML !== allRemindersText) {
+                    zmanimRemindersEl.innerHTML = allRemindersText;
+                }
+
+                // בדיקה אם הטקסט ארוך מהמסך - אם כן, מפעילים גלילה (Marquee)
+                if (zmanimRemindersEl.scrollWidth > remindersWrapper.clientWidth) {
+                    if (!zmanimRemindersEl.classList.contains('animate-scroll')) {
+                        zmanimRemindersEl.classList.add('animate-scroll');
+                        zmanimRemindersEl.classList.remove('text-center', 'w-full');
+                    }
+                    // התאמת מהירות הגלילה באופן דינמי לאורך הטקסט
+                    const speed = 100; // פיקסלים לשנייה
+                    const dist = window.innerWidth + zmanimRemindersEl.scrollWidth;
+                    zmanimRemindersEl.style.animationDuration = `${dist / speed}s`;
+                } else {
+                    // הטקסט נכנס בשורה אחת, פשוט נמרכז אותו
+                    zmanimRemindersEl.classList.remove('animate-scroll');
+                    zmanimRemindersEl.classList.add('text-center', 'w-full');
+                    zmanimRemindersEl.style.animationDuration = '';
+                }
+            } else {
+                remindersWrapper.classList.add('hidden');
+                remindersWrapper.classList.remove('flex');
             }
         }
 
