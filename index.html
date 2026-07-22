@@ -108,30 +108,32 @@
 <body class="h-screen w-screen flex flex-col justify-between p-4 md:p-6 relative overflow-hidden">
 
     <!-- Pikud HaOref Red Alert Overlay (צבע אדום) -->
-    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-10 text-center transition-opacity duration-300">
-        <div class="animate-ping mb-8">
-            <i data-lucide="triangle-alert" class="w-32 h-32 md:w-48 md:h-48 text-white"></i>
+    <!-- שופרו השוליים והריווחים כדי שהשורה התחתונה תמיד תהיה גלויה -->
+    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-4 md:p-8 text-center transition-opacity duration-300">
+        <div class="animate-ping mb-2 md:mb-4 flex-shrink-0">
+            <i data-lucide="triangle-alert" class="w-24 h-24 md:w-36 md:h-36 text-white"></i>
         </div>
-        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest" style="font-size: min(12vw, 20vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(10vw, 18vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             צבע אדום!
         </div>
-        <div id="redAlertAreas" class="text-white font-bold mt-6" style="font-size: min(6vw, 10vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
+        <div id="redAlertAreas" class="text-white font-bold mt-2 md:mt-4 flex-shrink-0" style="font-size: min(5vw, 8vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
             <!-- ירושלים דרום -->
         </div>
-        <div class="text-white/90 font-medium mt-10 text-3xl md:text-5xl">
+        <div class="text-white/95 font-bold mt-4 md:mt-8 text-2xl md:text-4xl px-4 flex-shrink-0">
             נא להיכנס מיד למרחב המוגן ולשהות בו 10 דקות
         </div>
     </div>
 
     <!-- Safe Room Timer Overlay (טיימר 10 דקות) -->
-    <div id="safeRoomOverlay" class="hidden fixed inset-0 z-[90] bg-[#121212] flex-col items-center justify-center p-10 text-center transition-opacity duration-500">
-        <div class="mb-6">
-            <i data-lucide="shield-check" class="w-24 h-24 md:w-32 md:h-32 text-orange-500 mx-auto"></i>
+    <!-- הרקע כעת שקוף בדיוק כמו ההודעות הקופצות כדי לראות את השעון -->
+    <div id="safeRoomOverlay" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
+        <div class="mb-4">
+            <i data-lucide="shield-check" class="w-20 h-20 md:w-28 md:h-28 text-orange-500 mx-auto"></i>
         </div>
-        <div class="text-orange-400 font-bold text-3xl md:text-5xl mb-6">
+        <div class="text-orange-400 font-bold text-2xl md:text-4xl mb-4 drop-shadow-lg">
             יש להישאר במרחב המוגן עד סיום הספירה:
         </div>
-        <div id="safeRoomTimerDisplay" class="text-orange-500 font-black tracking-widest" style="font-size: min(25vw, 35vh); text-shadow: 0 5px 20px rgba(249, 115, 22, 0.3);">
+        <div id="safeRoomTimerDisplay" class="text-orange-500 font-black tracking-widest" style="font-size: min(20vw, 30vh); text-shadow: 0 5px 20px rgba(249, 115, 22, 0.5);">
             10:00
         </div>
     </div>
@@ -561,7 +563,7 @@
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
         
         // Pikud HaOref Variables
-        let orefEnabled = localStorage.getItem('orefEnabled') !== 'false'; // ברירת מחדל דלוק
+        let orefEnabled = localStorage.getItem('orefEnabled') !== 'false'; 
         let orefZones = localStorage.getItem('orefZones') || 'ירושלים דרום, ירושלים';
         let safeRoomEndTime = 0;
         let isSafeRoomMode = false;
@@ -622,7 +624,6 @@
         const toastEl = document.getElementById('toast');
         const toastMsgEl = document.getElementById('toastMsg');
 
-        // Smart Announcements UI Elements
         const newAnnType = document.getElementById('newAnnType');
         const newAnnWeekdays = document.getElementById('newAnnWeekdays');
         const newAnnDateContainer = document.getElementById('newAnnDateContainer');
@@ -640,14 +641,13 @@
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
         // --- Pikud HaOref Logic ---
-        setInterval(pollOref, 2000); // Check every 2 seconds
+        setInterval(pollOref, 2000); 
 
         let isTestingAlert = false;
 
         async function pollOref() {
             if (!orefEnabled || isTestingAlert) return;
             try {
-                // משיכת הקובץ הרשמי של פיקוד העורף
                 const res = await fetch("https://www.oref.org.il/WarningMessages/alert/alerts.json", {
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
@@ -668,7 +668,6 @@
                         const matchedZones = data.data.filter(alertZone => configuredZones.includes(alertZone));
                         
                         if (matchedZones.length > 0) {
-                            // זיהוי סוג האיום מהכותרת
                             const alertType = data.title || "צבע אדום!";
                             showRedAlert(matchedZones, alertType);
                         } else {
@@ -679,7 +678,7 @@
                     hideRedAlert();
                 }
             } catch (e) {
-                // שגיאת רשת שקטה (במקרה ואין הרחבת CORS)
+                // שגיאת רשת שקטה (CORS)
             }
         }
 
@@ -696,12 +695,10 @@
             overlay.classList.remove('hidden');
             overlay.classList.add('flex');
             
-            // קביעת זמן סיום לממ"ד (10 דקות מעכשיו) רק אם זה זינוק חדש
             if (!isSafeRoomMode) {
                 safeRoomEndTime = Date.now() + (10 * 60 * 1000);
             }
             
-            // מנגנון ביטחון: מעלימים את ההתרעה המהבהבת אחרי 2 דקות ומעבירים לטיימר ממ"ד
             clearTimeout(orefAlertTimeout);
             orefAlertTimeout = setTimeout(() => {
                 hideRedAlert();
@@ -714,7 +711,6 @@
                 overlay.classList.add('hidden');
                 overlay.classList.remove('flex');
                 
-                // ברגע שהמסך המהבהב יורד - מתחילים את טיימר השהייה בממ"ד
                 if (Date.now() < safeRoomEndTime) {
                     isSafeRoomMode = true;
                     updateSafeRoomTimer();
@@ -728,7 +724,6 @@
                 showRedAlert(['ירושלים דרום (הדגמה)'], "ירי רקטות וטילים (הדגמה)");
                 setTimeout(() => {
                     hideRedAlert();
-                    // בטסט אנחנו מבטלים את טיימר הממ"ד אחרי 10 שניות
                     safeRoomEndTime = Date.now() + (10 * 1000); 
                     isTestingAlert = false;
                 }, 8000); 
@@ -742,7 +737,6 @@
             const diffMs = safeRoomEndTime - nowMs;
             
             if (diffMs <= 0) {
-                // נגמרו ה-10 דקות בממ"ד
                 isSafeRoomMode = false;
                 safeRoomOverlay.classList.add('hidden');
                 safeRoomOverlay.classList.remove('flex');
@@ -1128,20 +1122,17 @@
                 gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
                 try {
-                    // Fetch Shabbat times + Haftarah
                     const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&leyning=1`);
                     if (shabbatRes.ok) {
                         const shabbatData = await shabbatRes.json();
                         let shabbatCandles = null;
                         let shabbatHavdalah = null;
-                        currentHaftarahStr = ""; // reset
+                        currentHaftarahStr = ""; 
 
                         if (shabbatData && shabbatData.items) {
                             for (const item of shabbatData.items) {
-                                // Extract Haftarah for Sephardic custom
                                 if (item.leyning && (item.leyning.haftarah_sephardic || item.leyning.haftarah)) {
                                     let haftarahEn = item.leyning.haftarah_sephardic || item.leyning.haftarah;
-                                    // Translate book to Hebrew
                                     for (let bookEn in haftarahBooks) {
                                         if (haftarahEn.startsWith(bookEn)) {
                                             haftarahEn = haftarahEn.replace(bookEn, haftarahBooks[bookEn]);
@@ -1180,7 +1171,6 @@
                             }
                             shabbatTimesEl.innerHTML = html;
 
-                            // בדיקה האם אנחנו כרגע בתוך זמן שבת
                             const _now = now.getTime();
                             if (shabbatCandles && shabbatHavdalah) {
                                 isShabbatNow = _now >= shabbatCandles.getTime() && _now <= shabbatHavdalah.getTime();
@@ -1207,7 +1197,6 @@
         function updateClock() {
             const now = new Date();
             
-            // עדכון טיימר ממ"ד אם הוא פעיל
             if (isSafeRoomMode) {
                 updateSafeRoomTimer();
             }
@@ -1217,7 +1206,7 @@
                 fetchDatesAndZmanim();
             }
 
-            // -- עדכון תצוגת התאריך העברי (בדיקת 13 דקות אחרי שקיעה) --
+            // עדכון תאריך עברי 13 דקות אחרי שקיעה
             let activeOmerDay = 0;
             if (currentHebrewDateStr && currentSunsetDate && nextHebrewDateStr) {
                 const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
@@ -1693,7 +1682,7 @@
 
         // --- Initialization ---
         fetchDatesAndZmanim();
-        setInterval(updateClock, 1000); // רץ כל שנייה
+        setInterval(updateClock, 1000); 
         updateClock(); 
 
     </script>
