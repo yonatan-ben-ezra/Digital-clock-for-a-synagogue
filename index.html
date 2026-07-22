@@ -94,11 +94,9 @@
             .zmanim-text { font-size: min(9vw, 10vh); }
             #zmanimNormal { flex-direction: column; gap: 0.5rem; }
             .divider-color { display: none; }
-            #weatherWidget { bottom: 1rem; left: 1rem; }
         }
     </style>
 </head>
-<!-- שימוש ב- flex-col ו- justify-between כדי שהמסך יתחלק נכון בלי חריגות -->
 <body class="h-screen w-screen flex flex-col justify-between p-4 md:p-6 relative overflow-hidden">
 
     <!-- Top Bar: Settings, Refresh, Fullscreen, and Dates -->
@@ -169,15 +167,6 @@
         <div id="announcementTextDisplay" class="text-yellow-400 font-black leading-tight" style="font-size: min(12vw, 20vh); text-shadow: 0 10px 30px rgba(0,0,0,1);">
             <!-- הטקסט יוזרק לכאן -->
         </div>
-    </div>
-
-    <!-- Weather Widget (Bottom Left) -->
-    <!-- מוצמד ישירות לתחתית, לא מפריע לזמנים -->
-    <div id="weatherWidget" class="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex items-center gap-3 bg-[#242424]/80 backdrop-blur-md border border-gray-700/50 p-3 rounded-2xl shadow-lg opacity-0 transition-opacity duration-1000 z-10">
-        <div id="weatherIconContainer">
-            <!-- Icon injected by JS -->
-        </div>
-        <div id="weatherTemp" class="text-xl md:text-3xl font-bold text-gray-200" dir="ltr">--°C</div>
     </div>
 
     <!-- Settings Modal -->
@@ -871,55 +860,6 @@
             return dates;
         }
 
-        // --- Weather Logic ---
-
-        function getWeatherIcon(wmoCode, isDay) {
-            if (wmoCode === 0) return isDay ? 'sun' : 'moon'; 
-            if (wmoCode === 1 || wmoCode === 2) return isDay ? 'cloud-sun' : 'cloud-moon'; 
-            if (wmoCode === 3) return 'cloud'; 
-            if (wmoCode >= 45 && wmoCode <= 48) return 'cloud-fog'; 
-            if (wmoCode >= 51 && wmoCode <= 57) return 'cloud-drizzle'; 
-            if (wmoCode >= 61 && wmoCode <= 67) return 'cloud-rain'; 
-            if (wmoCode >= 71 && wmoCode <= 77) return 'snowflake'; 
-            if (wmoCode >= 80 && wmoCode <= 82) return 'cloud-rain'; 
-            if (wmoCode >= 85 && wmoCode <= 86) return 'snowflake'; 
-            if (wmoCode >= 95) return 'cloud-lightning'; 
-            return 'cloud'; 
-        }
-
-        async function fetchWeather() {
-            try {
-                const lat = 31.769;
-                const lon = 35.2163;
-                
-                const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=auto`);
-                const data = await res.json();
-                
-                if (data && data.current_weather) {
-                    const temp = Math.round(data.current_weather.temperature);
-                    const code = data.current_weather.weathercode;
-                    const isDay = data.current_weather.is_day;
-                    
-                    const iconName = getWeatherIcon(code, isDay);
-                    let colorClass = 'text-gray-300';
-                    
-                    if (isDay && code <= 2) colorClass = 'text-yellow-400';
-                    else if (code >= 50 && code <= 67) colorClass = 'text-blue-400';
-                    else if (code >= 95) colorClass = 'text-purple-400';
-                    
-                    document.getElementById('weatherTemp').innerText = `${temp}°C`;
-                    
-                    const iconContainer = document.getElementById('weatherIconContainer');
-                    iconContainer.innerHTML = `<i data-lucide="${iconName}" class="w-8 h-8 md:w-10 md:h-10 ${colorClass}"></i>`;
-                    lucide.createIcons(); 
-                    
-                    document.getElementById('weatherWidget').classList.remove('opacity-0');
-                }
-            } catch (e) {
-                console.error("Error fetching weather:", e);
-            }
-        }
-        
         // --- API and Main Data Fetching ---
 
         function getOmerDay(hm, hd) {
@@ -1042,16 +982,16 @@
                 fetchDatesAndZmanim();
             }
 
-            // -- עדכון תצוגת התאריך העברי (בדיקת 20 דקות אחרי שקיעה) --
+            // -- עדכון תצוגת התאריך העברי (בדיקת 13 דקות אחרי שקיעה) --
             let activeOmerDay = 0;
             if (currentHebrewDateStr && currentSunsetDate && nextHebrewDateStr) {
-                const sunsetPlus20 = new Date(currentSunsetDate.getTime() + 20 * 60000);
+                const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
                 let dayPrefix = "יום " + hebrewDaysArr[now.getDay()];
                 let displayHebrewDate = currentHebrewDateStr;
                 activeOmerDay = currentOmerDay;
                 
-                // אם השעה הנוכחית היא אחרי שקיעה + 20 דקות (ועד חצות הלילה שאז היום ממילא מתחלף)
-                if (now.getTime() >= sunsetPlus20.getTime()) {
+                // אם השעה הנוכחית היא אחרי שקיעה + 13 דקות (ועד חצות הלילה שאז היום ממילא מתחלף)
+                if (now.getTime() >= sunsetPlus13.getTime()) {
                     if (now.getDay() === 5) {
                         // אם היום יום שישי, נכתוב "ליל שבת"
                         dayPrefix = "ליל שבת";
@@ -1447,7 +1387,6 @@
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
             fetchDatesAndZmanim();
-            fetchWeather(); // רענון ידני גם למזג האוויר
             showToast("מרענן נתונים...");
         });
 
@@ -1540,9 +1479,7 @@
         // --- Initialization ---
 
         fetchDatesAndZmanim();
-        fetchWeather(); // הפעלה ראשונה של מזג אוויר
         setInterval(updateClock, 1000); // שעון רץ כל שנייה
-        setInterval(fetchWeather, 30 * 60 * 1000); // רענון מזג אוויר כל חצי שעה
         updateClock(); 
 
     </script>
