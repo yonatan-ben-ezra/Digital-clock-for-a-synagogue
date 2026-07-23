@@ -108,24 +108,22 @@
 <body class="h-screen w-screen flex flex-col justify-between p-4 md:p-6 relative overflow-hidden">
 
     <!-- Pikud HaOref Red Alert Overlay (צבע אדום) -->
-    <!-- שופרו השוליים והריווחים כדי שהשורה התחתונה תמיד תהיה גלויה -->
-    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-4 md:p-8 text-center transition-opacity duration-300">
-        <div class="animate-ping mb-2 md:mb-4 flex-shrink-0">
-            <i data-lucide="triangle-alert" class="w-24 h-24 md:w-36 md:h-36 text-white"></i>
+    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-2 md:p-6 text-center transition-opacity duration-300">
+        <div class="animate-ping mb-2 flex-shrink-0">
+            <i data-lucide="triangle-alert" class="w-20 h-20 md:w-32 md:h-32 text-white"></i>
         </div>
-        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(10vw, 18vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(10vw, 16vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             צבע אדום!
         </div>
-        <div id="redAlertAreas" class="text-white font-bold mt-2 md:mt-4 flex-shrink-0" style="font-size: min(5vw, 8vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
+        <div id="redAlertAreas" class="text-white font-bold mt-2 md:mt-3 flex-shrink-0" style="font-size: min(5vw, 7vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
             <!-- ירושלים דרום -->
         </div>
-        <div class="text-white/95 font-bold mt-4 md:mt-8 text-2xl md:text-4xl px-4 flex-shrink-0">
+        <div class="text-white/95 font-bold mt-4 md:mt-6 text-xl md:text-3xl px-4 flex-shrink-0 bg-black/30 p-4 rounded-xl border border-white/20">
             נא להיכנס מיד למרחב המוגן ולשהות בו 10 דקות
         </div>
     </div>
 
     <!-- Safe Room Timer Overlay (טיימר 10 דקות) -->
-    <!-- הרקע כעת שקוף בדיוק כמו ההודעות הקופצות כדי לראות את השעון -->
     <div id="safeRoomOverlay" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
         <div class="mb-4">
             <i data-lucide="shield-check" class="w-20 h-20 md:w-28 md:h-28 text-orange-500 mx-auto"></i>
@@ -206,33 +204,6 @@
             
             <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
                 
-                <!-- Pikud HaOref Settings -->
-                <div class="mb-6 bg-red-900/20 p-4 rounded-xl border border-red-900/50">
-                    <h3 class="text-xl font-bold mb-3 text-red-400 flex items-center gap-2">
-                        <i data-lucide="siren" class="w-5 h-5"></i> התרעות פיקוד העורף
-                    </h3>
-                    <p class="text-sm text-gray-400 mb-3">המערכת תשתלט על המסך במקרה של אזעקת אמת באזורים הנבחרים, ותציג טיימר 10 דקות שהייה בממ"ד.</p>
-                    
-                    <div class="flex items-center justify-between mb-3 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
-                        <span class="text-white font-medium">הפעל התרעות מסך</span>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="orefEnabledToggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
-                        </label>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="block text-gray-300 mb-1 text-sm">אזורי התרעה (מופרדים בפסיק):</label>
-                        <input type="text" id="orefZonesInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-red-500 transition-colors" placeholder='לדוגמה: ירושלים דרום, ירושלים'>
-                    </div>
-
-                    <div class="mt-4 pt-3 border-t border-red-900/50 flex justify-end">
-                        <button id="testOrefAlertBtn" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-lg shadow-red-900/20">
-                            <i data-lucide="triangle-alert" class="w-4 h-4"></i> הדגם התרעת צבע אדום
-                        </button>
-                    </div>
-                </div>
-
                 <!-- Timer Settings -->
                 <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
                     <label for="minutesInput" class="block text-gray-300 mb-2 font-medium">
@@ -252,8 +223,8 @@
                     
                     <div class="flex items-center justify-between mb-4 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
                         <div>
-                            <div class="text-white font-medium">הצג הפטרה (לספרדים) בשבתות</div>
-                            <div class="text-xs text-gray-400">יתווסף אוטומטית מכניסת שבת עד צאתה</div>
+                            <div class="text-white font-medium">הצג הפטרה בשבת וחג</div>
+                            <div class="text-xs text-gray-400">יתווסף אוטומטית מתחילת ערב שבת/חג ועד 12:00 בצהריים</div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="showHaftarahToggle" class="sr-only peer">
@@ -349,7 +320,7 @@
                 </div>
 
                 <!-- Zmanim Table Editor -->
-                <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700 relative">
+                <div class="bg-[#2a2a2a] p-4 rounded-xl border border-gray-700 relative mb-6">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                         <div>
                             <h3 class="text-xl font-bold text-white">עריכת זמנים ידנית (וחישוב קיזוז)</h3>
@@ -379,6 +350,33 @@
                                 <!-- Data will be populated here -->
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Pikud HaOref Settings (Moved to bottom) -->
+                <div class="mb-2 bg-red-900/20 p-4 rounded-xl border border-red-900/50">
+                    <h3 class="text-xl font-bold mb-3 text-red-400 flex items-center gap-2">
+                        <i data-lucide="siren" class="w-5 h-5"></i> התרעות פיקוד העורף
+                    </h3>
+                    <p class="text-sm text-gray-400 mb-3">המערכת תשתלט על המסך במקרה של אזעקת אמת באזורים הנבחרים, ותציג טיימר 10 דקות שהייה בממ"ד.</p>
+                    
+                    <div class="flex items-center justify-between mb-3 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
+                        <span class="text-white font-medium">הפעל התרעות מסך</span>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="orefEnabledToggle" class="sr-only peer">
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="block text-gray-300 mb-1 text-sm">אזורי התרעה (מופרדים בפסיק):</label>
+                        <input type="text" id="orefZonesInput" class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-2 outline-none focus:border-red-500 transition-colors" placeholder='לדוגמה: ירושלים דרום, ירושלים'>
+                    </div>
+
+                    <div class="mt-4 pt-3 border-t border-red-900/50 flex justify-end">
+                        <button id="testOrefAlertBtn" class="bg-red-700 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm font-bold shadow-lg shadow-red-900/20">
+                            <i data-lucide="triangle-alert" class="w-4 h-4"></i> הדגם התרעת צבע אדום
+                        </button>
                     </div>
                 </div>
 
@@ -570,6 +568,8 @@
         
         let showHaftarah = localStorage.getItem('showHaftarah') !== 'false';
         let currentHaftarahStr = "";
+        let currentShabbatCandles = null;
+        let currentShabbatHavdalah = null;
 
         let announcementsList = JSON.parse(localStorage.getItem('smartAnnouncements')) || [];
         let editingAnnId = null;
@@ -578,16 +578,7 @@
         let lastFetchedDateString = "";
         let toastTimeout;
         let hasShabbatTimes = false;
-        let isShabbatNow = false;
         let inactivityTimeout;
-
-        // Haftarah Translation Dictionary
-        const haftarahBooks = {
-            "Isaiah": "ישעיהו", "Jeremiah": "ירמיהו", "Ezekiel": "יחזקאל", "Hosea": "הושע", "Joel": "יואל", "Amos": "עמוס", 
-            "Obadiah": "עובדיה", "Jonah": "יונה", "Micah": "מיכה", "Nahum": "נחום", "Habakkuk": "חבקוק", "Zephaniah": "צפניה", 
-            "Haggai": "חגי", "Zechariah": "זכריה", "Malachi": "מלאכי", "I Kings": "מלכים א'", "II Kings": "מלכים ב'", 
-            "I Samuel": "שמואל א'", "II Samuel": "שמואל ב'", "Joshua": "יהושע", "Judges": "שופטים"
-        };
 
         // Elements
         const clockEl = document.getElementById('clock');
@@ -1122,43 +1113,77 @@
                 gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
 
                 try {
+                    // Fetching upcoming week's Shabbat info to correctly get upcoming candles/havdalah
                     const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&leyning=1`);
                     if (shabbatRes.ok) {
                         const shabbatData = await shabbatRes.json();
                         let shabbatCandles = null;
                         let shabbatHavdalah = null;
-                        currentHaftarahStr = ""; 
-
+                        
                         if (shabbatData && shabbatData.items) {
                             for (const item of shabbatData.items) {
+                                // Sefaria API fetch for 2 first words of Haftarah
                                 if (item.leyning && (item.leyning.haftarah_sephardic || item.leyning.haftarah)) {
-                                    let haftarahEn = item.leyning.haftarah_sephardic || item.leyning.haftarah;
-                                    for (let bookEn in haftarahBooks) {
-                                        if (haftarahEn.startsWith(bookEn)) {
-                                            haftarahEn = haftarahEn.replace(bookEn, haftarahBooks[bookEn]);
-                                            break;
+                                    const haftarahEn = item.leyning.haftarah_sephardic || item.leyning.haftarah;
+                                    const cachedHaftarah = localStorage.getItem('haftarah_' + haftarahEn);
+                                    if (cachedHaftarah) {
+                                        currentHaftarahStr = cachedHaftarah;
+                                    } else {
+                                        try {
+                                            const firstVerse = haftarahEn.split('-')[0].replace(/ /g, '_');
+                                            const res = await fetch(`https://www.sefaria.org/api/texts/${firstVerse}?context=0`);
+                                            if (res.ok) {
+                                                const data = await res.json();
+                                                let heText = data.he;
+                                                if (Array.isArray(heText)) heText = heText[0];
+                                                if (heText) {
+                                                    // Strip HTML, Nikkud, Taamim, Punctuation
+                                                    const cleanText = heText.replace(/<[^>]*>?/gm, '')
+                                                                            .replace(/[\u0591-\u05C7]/g, '')
+                                                                            .replace(/־/g, ' ')
+                                                                            .replace(/[^\u05D0-\u05EA ]/g, '')
+                                                                            .replace(/\s+/g, ' ')
+                                                                            .trim();
+                                                    const words = cleanText.split(' ');
+                                                    if (words.length >= 2) {
+                                                        currentHaftarahStr = `הפטרה: ${words[0]} ${words[1]}`;
+                                                        localStorage.setItem('haftarah_' + haftarahEn, currentHaftarahStr);
+                                                    }
+                                                }
+                                            }
+                                        } catch(e) {
+                                            console.error("Sefaria API err:", e);
                                         }
                                     }
-                                    currentHaftarahStr = `הפטרה השבת: ${haftarahEn}`;
                                 }
 
                                 if (!item.date) continue;
-                                const itemDate = item.date.split('T')[0];
-                                if (itemDate === todayStr || itemDate === tomorrowStr || now.getDay() === 5 || now.getDay() === 6) {
-                                    if (item.category === 'candles') {
-                                        shabbatCandles = new Date(item.date);
-                                        if (globalSunsetOffset) {
-                                            shabbatCandles.setMinutes(shabbatCandles.getMinutes() + globalSunsetOffset);
-                                        }
-                                    } else if (item.category === 'havdalah') {
-                                        shabbatHavdalah = new Date(item.date);
+                                
+                                // Store the next upcoming candles and havdalah
+                                if (item.category === 'candles' && !shabbatCandles) {
+                                    shabbatCandles = new Date(item.date);
+                                    if (globalSunsetOffset) {
+                                        shabbatCandles.setMinutes(shabbatCandles.getMinutes() + globalSunsetOffset);
                                     }
+                                } else if (item.category === 'havdalah' && !shabbatHavdalah) {
+                                    shabbatHavdalah = new Date(item.date);
                                 }
                             }
                         }
 
-                        hasShabbatTimes = !!(shabbatCandles || shabbatHavdalah);
-                        isShabbatNow = false;
+                        currentShabbatCandles = shabbatCandles;
+                        currentShabbatHavdalah = shabbatHavdalah;
+
+                        // Check if we should display the Shabbat/Holiday times TODAY
+                        let showShabbatTimesToday = false;
+                        if (now.getDay() === 5 || now.getDay() === 6) {
+                            showShabbatTimesToday = true; 
+                        } else {
+                            if (shabbatCandles && formatDate(shabbatCandles) === todayStr) showShabbatTimesToday = true;
+                            if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) showShabbatTimesToday = true;
+                        }
+
+                        hasShabbatTimes = !!(shabbatCandles || shabbatHavdalah) && showShabbatTimesToday;
 
                         if (hasShabbatTimes) {
                             let html = '';
@@ -1167,19 +1192,11 @@
                             }
                             if (shabbatHavdalah) {
                                 if (shabbatCandles) html += `<div class="divider-color mx-4">|</div>`;
-                                html += `<div>צאת שבת/חג: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
+                                // Check if havdalah falls on Saturday (Shabbat) or another day (Holiday)
+                                const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
+                                html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
                             }
                             shabbatTimesEl.innerHTML = html;
-
-                            const _now = now.getTime();
-                            if (shabbatCandles && shabbatHavdalah) {
-                                isShabbatNow = _now >= shabbatCandles.getTime() && _now <= shabbatHavdalah.getTime();
-                            } else if (now.getDay() === 6 && shabbatHavdalah) {
-                                isShabbatNow = _now <= shabbatHavdalah.getTime();
-                            } else if (now.getDay() === 5 && shabbatCandles) {
-                                isShabbatNow = _now >= shabbatCandles.getTime();
-                            }
-
                         } else {
                             shabbatTimesEl.innerHTML = '';
                         }
@@ -1206,7 +1223,7 @@
                 fetchDatesAndZmanim();
             }
 
-            // עדכון תאריך עברי 13 דקות אחרי שקיעה
+            // Update Hebrew Date (13 mins after sunset)
             let activeOmerDay = 0;
             if (currentHebrewDateStr && currentSunsetDate && nextHebrewDateStr) {
                 const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
@@ -1325,6 +1342,25 @@
                 }
             }
 
+            // -- Haftarah Display Logic (From start of Erev Shabbat/Chag to 12:00 PM next day) --
+            let isHaftarahTime = false;
+            if (currentShabbatHavdalah) {
+                // Set cutoff time to 12:00 PM on the day of Havdalah
+                const haftarahCutoff = new Date(currentShabbatHavdalah);
+                haftarahCutoff.setHours(12, 0, 0, 0); 
+                const nowMs = now.getTime();
+                
+                // Ensure candles belong to THIS upcoming/current Shabbat
+                if (currentShabbatCandles && currentShabbatCandles.getTime() < haftarahCutoff.getTime()) {
+                    const haftarahStart = new Date(currentShabbatCandles);
+                    haftarahStart.setHours(0, 0, 0, 0); // Start of Erev Shabbat
+                    isHaftarahTime = nowMs >= haftarahStart.getTime() && nowMs <= haftarahCutoff.getTime();
+                } else {
+                    // Fallback if candles were yesterday
+                    isHaftarahTime = nowMs <= haftarahCutoff.getTime();
+                }
+            }
+
             // -- Reminders Marquee --
             const activeReminders = remindersList.filter(r => r.active).map(r => r.text);
             
@@ -1332,7 +1368,7 @@
                 activeReminders.unshift(`היום ${activeOmerDay} ימים לעומר`);
             }
 
-            if (showHaftarah && isShabbatNow && currentHaftarahStr) {
+            if (showHaftarah && isHaftarahTime && currentHaftarahStr) {
                 activeReminders.unshift(currentHaftarahStr);
             }
 
