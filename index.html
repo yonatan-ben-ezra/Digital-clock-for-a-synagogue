@@ -110,7 +110,7 @@
     <!-- Pikud HaOref Red Alert Overlay (צבע אדום) -->
     <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-2 md:p-6 text-center transition-opacity duration-300">
         <div class="animate-ping mb-2 flex-shrink-0">
-            <i data-lucide="triangle-alert" class="w-20 h-20 md:w-32 md:h-32 text-white"></i>
+            <i data-lucide="triangle-alert" class="w-20 h-20 md:w-24 md:h-24 text-white"></i>
         </div>
         <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(10vw, 16vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             צבע אדום!
@@ -118,7 +118,7 @@
         <div id="redAlertAreas" class="text-white font-bold mt-2 md:mt-3 flex-shrink-0" style="font-size: min(5vw, 7vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
             <!-- ירושלים דרום -->
         </div>
-        <div class="text-white/95 font-bold mt-4 md:mt-6 text-xl md:text-3xl px-4 flex-shrink-0 bg-black/30 p-4 rounded-xl border border-white/20">
+        <div class="text-white/95 font-bold mt-3 md:mt-4 text-xl md:text-3xl px-4 flex-shrink-0 bg-black/30 p-3 md:p-4 rounded-xl border border-white/20 whitespace-normal">
             נא להיכנס מיד למרחב המוגן ולשהות בו 10 דקות
         </div>
     </div>
@@ -224,7 +224,7 @@
                     <div class="flex items-center justify-between mb-4 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
                         <div>
                             <div class="text-white font-medium">הצג הפטרה בשבת וחג</div>
-                            <div class="text-xs text-gray-400">יתווסף אוטומטית מתחילת ערב שבת/חג ועד 12:00 בצהריים</div>
+                            <div class="text-xs text-gray-400">יתווסף אוטומטית ביום שבת/חג עד השעה 12:00 בצהריים</div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="showHaftarahToggle" class="sr-only peer">
@@ -358,7 +358,7 @@
                     <h3 class="text-xl font-bold mb-3 text-red-400 flex items-center gap-2">
                         <i data-lucide="siren" class="w-5 h-5"></i> התרעות פיקוד העורף
                     </h3>
-                    <p class="text-sm text-gray-400 mb-3">המערכת תשתלט על המסך במקרה של אזעקת אמת באזורים הנבחרים, ותציג טיימר 10 דקות שהייה בממ"ד.</p>
+                    <p class="text-sm text-gray-400 mb-3">המערכת תשתלט על המסך במקרה של אזעקת אמת באזורים הנבחרים, ותציג טיימר 10 דקות שהייה בממ"ד לאחר סיום האזעקה.</p>
                     
                     <div class="flex items-center justify-between mb-3 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
                         <span class="text-white font-medium">הפעל התרעות מסך</span>
@@ -402,7 +402,6 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Initialize Icons
         lucide.createIcons();
 
         // --- Firebase Cloud Sync Setup ---
@@ -631,7 +630,6 @@
 
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
-        // --- Pikud HaOref Logic ---
         setInterval(pollOref, 2000); 
 
         let isTestingAlert = false;
@@ -669,7 +667,7 @@
                     hideRedAlert();
                 }
             } catch (e) {
-                // שגיאת רשת שקטה (CORS)
+                // שגיאת רשת שקטה
             }
         }
 
@@ -715,9 +713,9 @@
                 showRedAlert(['ירושלים דרום (הדגמה)'], "ירי רקטות וטילים (הדגמה)");
                 setTimeout(() => {
                     hideRedAlert();
-                    safeRoomEndTime = Date.now() + (10 * 1000); 
+                    safeRoomEndTime = Date.now() + (10 * 1000); // 10 שניות לבדיקה
                     isTestingAlert = false;
-                }, 8000); 
+                }, 8000); // 8 שניות אדום
             });
         }
         
@@ -1176,26 +1174,22 @@
 
                         // Check if we should display the Shabbat/Holiday times TODAY
                         let showShabbatTimesToday = false;
-                        if (now.getDay() === 5 || now.getDay() === 6) {
-                            showShabbatTimesToday = true; 
-                        } else {
-                            if (shabbatCandles && formatDate(shabbatCandles) === todayStr) showShabbatTimesToday = true;
-                            if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) showShabbatTimesToday = true;
+                        let html = '';
+                        
+                        // בימי שישי/ערבי חג - נציג רק הדלקת נרות. בשבתות/חגים - נציג רק צאת שבת/חג
+                        if (shabbatCandles && formatDate(shabbatCandles) === todayStr) {
+                            html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
+                            showShabbatTimesToday = true;
+                        } else if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) {
+                            // בדיקה אם יציאת החג נופלת על יום שבת (6) או יום חול אחר
+                            const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
+                            html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
+                            showShabbatTimesToday = true;
                         }
 
-                        hasShabbatTimes = !!(shabbatCandles || shabbatHavdalah) && showShabbatTimesToday;
+                        hasShabbatTimes = showShabbatTimesToday;
 
                         if (hasShabbatTimes) {
-                            let html = '';
-                            if (shabbatCandles) {
-                                html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
-                            }
-                            if (shabbatHavdalah) {
-                                if (shabbatCandles) html += `<div class="divider-color mx-4">|</div>`;
-                                // Check if havdalah falls on Saturday (Shabbat) or another day (Holiday)
-                                const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
-                                html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
-                            }
                             shabbatTimesEl.innerHTML = html;
                         } else {
                             shabbatTimesEl.innerHTML = '';
@@ -1342,22 +1336,13 @@
                 }
             }
 
-            // -- Haftarah Display Logic (From start of Erev Shabbat/Chag to 12:00 PM next day) --
+            // -- Haftarah Display Logic --
             let isHaftarahTime = false;
             if (currentShabbatHavdalah) {
-                // Set cutoff time to 12:00 PM on the day of Havdalah
-                const haftarahCutoff = new Date(currentShabbatHavdalah);
-                haftarahCutoff.setHours(12, 0, 0, 0); 
-                const nowMs = now.getTime();
-                
-                // Ensure candles belong to THIS upcoming/current Shabbat
-                if (currentShabbatCandles && currentShabbatCandles.getTime() < haftarahCutoff.getTime()) {
-                    const haftarahStart = new Date(currentShabbatCandles);
-                    haftarahStart.setHours(0, 0, 0, 0); // Start of Erev Shabbat
-                    isHaftarahTime = nowMs >= haftarahStart.getTime() && nowMs <= haftarahCutoff.getTime();
-                } else {
-                    // Fallback if candles were yesterday
-                    isHaftarahTime = nowMs <= haftarahCutoff.getTime();
+                const havdalahDateStr = formatDate(currentShabbatHavdalah);
+                // מוצג רק ביום השבת/חג עצמו (יום יציאת השבת/חג) ורק עד השעה 12:00 בצהריים
+                if (todayStr === havdalahDateStr && now.getHours() < 12) {
+                    isHaftarahTime = true;
                 }
             }
 
