@@ -108,17 +108,17 @@
 <body class="h-screen w-screen flex flex-col justify-between p-4 md:p-6 relative overflow-hidden">
 
     <!-- Pikud HaOref Red Alert Overlay (צבע אדום) -->
-    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-2 md:p-6 text-center transition-opacity duration-300">
-        <div class="animate-ping mb-2 flex-shrink-0">
-            <i data-lucide="triangle-alert" class="w-16 h-16 md:w-20 md:h-20 text-white"></i>
+    <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-2 md:p-4 text-center transition-opacity duration-300">
+        <div class="animate-ping mb-1 md:mb-2 flex-shrink-0">
+            <i data-lucide="triangle-alert" class="w-12 h-12 md:w-20 md:h-20 text-white"></i>
         </div>
-        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(8vw, 12vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(7vw, 10vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             צבע אדום!
         </div>
         <div id="redAlertAreas" class="text-white font-bold mt-1 md:mt-2 flex-shrink-0" style="font-size: min(4vw, 6vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
             <!-- ירושלים דרום -->
         </div>
-        <div class="text-white/95 font-bold mt-2 md:mt-3 text-base md:text-2xl px-3 flex-shrink-0 bg-black/30 p-2 md:p-3 rounded-xl border border-white/20 whitespace-normal">
+        <div class="text-white/95 font-bold mt-2 md:mt-3 text-sm md:text-2xl px-2 md:px-3 flex-shrink-0 bg-black/30 p-2 rounded-xl border border-white/20 whitespace-normal">
             יש להיכנס מיד למרחב מוגן ולשהות בו 10 דקות
         </div>
     </div>
@@ -197,10 +197,17 @@
 
     <!-- Settings Modal -->
     <div id="settingsModal" class="hidden fixed inset-0 z-50 flex justify-center items-center modal-bg py-4">
-        <div class="bg-[#1e1e1e] border border-gray-700 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl mx-4 flex flex-col max-h-full">
-            <h2 class="text-2xl font-bold mb-4 text-white flex items-center gap-2 flex-shrink-0">
-                <i data-lucide="settings" class="w-6 h-6"></i> הגדרות
-            </h2>
+        <div class="bg-[#1e1e1e] border border-gray-700 rounded-2xl p-6 md:p-8 max-w-2xl w-full shadow-2xl mx-4 flex flex-col max-h-full relative">
+            
+            <div class="flex justify-between items-center mb-4 flex-shrink-0 border-b border-gray-700 pb-3">
+                <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+                    <i data-lucide="settings" class="w-6 h-6"></i> הגדרות
+                </h2>
+                <button id="unlockSettingsBtn" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-400 px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors shadow-md">
+                    <i data-lucide="lock" class="w-4 h-4" id="lockIcon"></i>
+                    <span id="lockText">מצב צפייה (לחץ לפתיחה)</span>
+                </button>
+            </div>
             
             <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
                 
@@ -228,7 +235,7 @@
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="showHaftarahToggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                         </label>
                     </div>
 
@@ -280,7 +287,7 @@
 
                         <div class="md:col-span-3 mt-2 border-t border-gray-600 pt-3">
                             <label class="flex items-center gap-2 text-gray-300 cursor-pointer w-fit hover:text-white transition-colors">
-                                <input type="checkbox" id="newAnnRepeatToggle" class="accent-yellow-500 w-4 h-4">
+                                <input type="checkbox" id="newAnnRepeatToggle" class="accent-yellow-500 w-4 h-4 peer-disabled:cursor-not-allowed">
                                 הפעל חזרות (נודניק)
                             </label>
                         </div>
@@ -364,7 +371,7 @@
                         <span class="text-white font-medium">הפעל התרעות מסך</span>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="orefEnabledToggle" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500"></div>
+                            <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                         </label>
                     </div>
 
@@ -383,8 +390,8 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-6 flex-shrink-0">
-                <button id="closeSettingsBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-colors font-medium text-lg">
-                    סגור ושמור
+                <button id="closeSettingsBtn" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors font-medium text-lg">
+                    סגור
                 </button>
             </div>
         </div>
@@ -403,6 +410,10 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         lucide.createIcons();
+
+        // --- Settings Password Lock ---
+        const ADMIN_PASSWORD = "5516"; // <<< תשנה את הסיסמה שלך כאן <<<
+        let isSettingsUnlocked = false;
 
         // --- Firebase Cloud Sync Setup ---
         const firebaseConfig = {
@@ -517,6 +528,7 @@
                         if (modal && !modal.classList.contains('hidden')) {
                             loadTableData();
                             renderAnnouncementsUI();
+                            renderRemindersUI();
                         }
                         showToast("הנתונים סונכרנו מהענן!");
                         updateClock(); 
@@ -628,7 +640,79 @@
         const addReminderBtn = document.getElementById('addReminderBtn');
         const remindersListElWrapper = document.getElementById('remindersListEl');
 
+        const unlockSettingsBtn = document.getElementById('unlockSettingsBtn');
+
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
+        // --- Apply Lock State Function ---
+        function applyLockState() {
+            const lockIcon = document.getElementById('lockIcon');
+            const lockText = document.getElementById('lockText');
+            const closeBtn = document.getElementById('closeSettingsBtn');
+
+            // Select all inputs except the unlock button itself
+            const inputsToLock = document.querySelectorAll('#settingsModal input, #settingsModal select');
+            const actionBtns = document.querySelectorAll('#addReminderBtn, #addAnnBtn, #testOrefAlertBtn, .delete-reminder-btn, .edit-ann-btn, .delete-ann-btn, .undo-btn');
+
+            if (isSettingsUnlocked) {
+                lockIcon.setAttribute('data-lucide', 'unlock');
+                lockText.innerText = 'מצב עריכה פתוח (נעל)';
+                unlockSettingsBtn.classList.remove('text-gray-400');
+                unlockSettingsBtn.classList.add('text-green-400');
+                
+                closeBtn.innerText = 'סגור ושמור';
+                closeBtn.classList.replace('bg-gray-600', 'bg-blue-600');
+                closeBtn.classList.replace('hover:bg-gray-500', 'hover:bg-blue-500');
+
+                inputsToLock.forEach(el => {
+                    el.disabled = false;
+                    el.classList.remove('opacity-50', 'cursor-not-allowed');
+                });
+                actionBtns.forEach(el => {
+                    el.disabled = false;
+                    el.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                });
+            } else {
+                lockIcon.setAttribute('data-lucide', 'lock');
+                lockText.innerText = 'מצב צפייה (לחץ לפתיחה)';
+                unlockSettingsBtn.classList.add('text-gray-400');
+                unlockSettingsBtn.classList.remove('text-green-400');
+                
+                closeBtn.innerText = 'סגור';
+                closeBtn.classList.replace('bg-blue-600', 'bg-gray-600');
+                closeBtn.classList.replace('hover:bg-blue-500', 'hover:bg-gray-500');
+
+                inputsToLock.forEach(el => {
+                    el.disabled = true;
+                    if(el.type !== 'checkbox' && el.type !== 'radio') {
+                        el.classList.add('opacity-50', 'cursor-not-allowed');
+                    }
+                });
+                actionBtns.forEach(el => {
+                    el.disabled = true;
+                    el.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+                });
+            }
+            lucide.createIcons();
+        }
+
+        unlockSettingsBtn.addEventListener('click', () => {
+            if (isSettingsUnlocked) {
+                isSettingsUnlocked = false;
+                applyLockState();
+                showToast("ההגדרות ננעלו (מצב צפייה)");
+            } else {
+                const pass = prompt("הכנס סיסמה לעריכת ההגדרות:");
+                if (pass === ADMIN_PASSWORD) {
+                    isSettingsUnlocked = true;
+                    applyLockState();
+                    showToast("ההגדרות נפתחו לעריכה בהצלחה!");
+                } else if (pass !== null) {
+                    alert("סיסמה שגויה. נשאר במצב צפייה.");
+                }
+            }
+        });
+
 
         setInterval(pollOref, 2000); 
 
@@ -709,6 +793,7 @@
         
         if (testOrefAlertBtn) {
             testOrefAlertBtn.addEventListener('click', () => {
+                if(!isSettingsUnlocked) return;
                 isTestingAlert = true;
                 showRedAlert(['ירושלים דרום (הדגמה)'], "ירי רקטות וטילים (הדגמה)");
                 setTimeout(() => {
@@ -801,11 +886,13 @@
             addAnnBtn.className = "bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2";
             cancelEditAnnBtn.classList.add('hidden');
             lucide.createIcons();
+            applyLockState();
         }
 
         cancelEditAnnBtn.addEventListener('click', resetAnnForm);
 
         addAnnBtn.addEventListener('click', () => {
+            if(!isSettingsUnlocked) return;
             const text = document.getElementById('newAnnText').value.trim();
             const time = document.getElementById('newAnnTime').value;
             const duration = parseInt(document.getElementById('newAnnDuration').value);
@@ -876,6 +963,7 @@
             announcementsListEl.innerHTML = '';
             if(announcementsList.length === 0) {
                 announcementsListEl.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">אין הודעות מתוזמנות במערכת.</div>';
+                applyLockState();
                 return;
             }
 
@@ -925,6 +1013,7 @@
 
             document.querySelectorAll('.edit-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     const ann = announcementsList.find(a => a.id === id);
                     if (ann) {
@@ -967,6 +1056,7 @@
 
             document.querySelectorAll('.delete-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     announcementsList = announcementsList.filter(a => a.id !== id);
                     if (editingAnnId === id) resetAnnForm();
@@ -974,6 +1064,8 @@
                     renderAnnouncementsUI();
                 });
             });
+
+            applyLockState();
         }
 
         function saveAnnouncementsLocalAndCloud() {
@@ -1061,8 +1153,6 @@
                 const todayStr = formatDate(now);
                 const isNewDay = (todayStr !== lastFetchedDateString);
                 
-                // איפוס נתוני התאריך ושבת בכל יום חדש.
-                // מונע הצגת תאריך ישן של "אתמול" במקרה שיש כעת הפסקת אינטרנט.
                 if (isNewDay) {
                     currentHebrewDateStr = "טוען תאריך...";
                     nextHebrewDateStr = "טוען תאריך...";
@@ -1086,7 +1176,6 @@
                     baseSunrise = new Date(zmanimData.times.sunrise);
                     baseSunset = new Date(zmanimData.times.sunset);
 
-                    // Update local cache so it's fresh for next time offline
                     let cachedZmanim = JSON.parse(localStorage.getItem('baseZmanimCache') || '{}');
                     cachedZmanim[todayStr] = {
                         sunrise: zmanimData.times.sunrise,
@@ -1104,7 +1193,6 @@
                     }
                 }
 
-                // If we successfully got zmanim (either from web or cache)
                 if (baseSunrise && baseSunset) {
                     if (globalSunsetOffset) {
                         baseSunset.setMinutes(baseSunset.getMinutes() + globalSunsetOffset);
@@ -1130,7 +1218,7 @@
                     netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
                 }
 
-                // 2. Fetch Hebrew Date (Try/Catch to protect the whole flow)
+                // 2. Fetch Hebrew Date 
                 try {
                     const tomorrow = new Date(now);
                     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -1157,7 +1245,6 @@
                     gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
                 } catch (hebErr) {
                     console.warn("Hebrew Date fetch failed.", hebErr);
-                    // אם יום חדש והאינטרנט למטה, אל תשאיר 'טוען תאריך...' לנצח. הודע שיש שגיאה.
                     if (currentHebrewDateStr === "טוען תאריך...") {
                         currentHebrewDateStr = "אין אינטרנט (תאריך חסר)";
                         nextHebrewDateStr = "אין אינטרנט (תאריך חסר)";
@@ -1175,7 +1262,6 @@
                         
                         if (shabbatData && shabbatData.items) {
                             for (const item of shabbatData.items) {
-                                // Sefaria API fetch for Haftarah (First 2 words)
                                 if (item.leyning && (item.leyning.haftarah_sephardic || item.leyning.haftarah)) {
                                     const haftarahEn = item.leyning.haftarah_sephardic || item.leyning.haftarah;
                                     const cachedHaftarah = localStorage.getItem('haftarah_' + haftarahEn);
@@ -1228,11 +1314,12 @@
                         let showShabbatTimesToday = false;
                         let html = '';
                         
-                        // פיצול הזמנים: בימי שישי/ערב חג יופיע רק "הדלקת נרות". ביום השבת/חג יופיע רק "צאת".
-                        if (shabbatCandles && formatDate(shabbatCandles) === todayStr) {
+                        const curDay = now.getDay();
+                        
+                        if (shabbatCandles && (curDay === 5 || formatDate(shabbatCandles) === todayStr)) {
                             html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
                             showShabbatTimesToday = true;
-                        } else if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) {
+                        } else if (shabbatHavdalah && (curDay === 6 || formatDate(shabbatHavdalah) === todayStr)) {
                             const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
                             html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
                             showShabbatTimesToday = true;
@@ -1248,7 +1335,6 @@
                     }
                 } catch (e) {
                     console.error("Error fetching Shabbat times:", e);
-                    // במקרה שגיאה אין צורך לטפל. הערכים יהיו פשוט נקיים כי הם התאפסו בתחילת היום.
                 }
 
             } catch (err) {
@@ -1265,12 +1351,10 @@
             }
 
             const todayStr = formatDate(now);
-            // משיכת נתונים אוטומטית כשהיום מתחלף
             if (todayStr !== lastFetchedDateString) {
                 fetchDatesAndZmanim();
             }
 
-            // Update Hebrew Date (13 mins after sunset)
             let activeOmerDay = 0;
             if (currentHebrewDateStr && currentHebrewDateStr !== "טוען תאריך..." && !currentHebrewDateStr.includes("אין אינטרנט")) {
                 let displayHebrewDate = currentHebrewDateStr;
@@ -1292,7 +1376,6 @@
                 }
                 hebrewDateEl.innerText = `${dayPrefix}, ${displayHebrewDate}`;
             } else {
-                // If there's an error or it's still loading, show exactly what's inside the variable.
                 hebrewDateEl.innerText = currentHebrewDateStr || "טוען...";
             }
 
@@ -1395,9 +1478,16 @@
 
             // -- Haftarah Display Logic --
             let isHaftarahTime = false;
-            // ההפטרה תוצג רק ביום השבת/חג עצמו (מחצות הלילה ועד 12:00 בצהריים)
             if (currentShabbatHavdalah) {
                 const havdalahDateStr = formatDate(currentShabbatHavdalah);
+                const curDay = now.getDay();
+                if (todayStr === havdalahDateStr && now.getHours() < 12) {
+                    isHaftarahTime = true;
+                } else if (curDay === 5 && now.getHours() >= 0) { 
+                    // To handle starting from midnight of Friday (beginning of Shabbat day conceptually in some logic, but wait, midnight Friday means Friday 00:00.
+                    // Wait, Shabbat is Saturday. From Friday midnight? No, Saturday midnight. 
+                    // Let's rely on todayStr === havdalahDateStr which means it's the day of out-of-shabbat (Saturday).
+                }
                 if (todayStr === havdalahDateStr && now.getHours() < 12) {
                     isHaftarahTime = true;
                 }
@@ -1585,6 +1675,7 @@
 
             tableBody.querySelectorAll('input[type="time"]').forEach(input => {
                 input.addEventListener('change', (e) => {
+                    if(!isSettingsUnlocked) return;
                     const dateStr = e.target.getAttribute('data-date');
                     const type = e.target.getAttribute('data-type');
                     const val = e.target.value;
@@ -1613,6 +1704,7 @@
 
             tableBody.querySelectorAll('.undo-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if(!isSettingsUnlocked) return;
                     const button = e.currentTarget;
                     const dateStr = button.getAttribute('data-date');
                     const type = button.getAttribute('data-type');
@@ -1630,11 +1722,14 @@
                     }
                 });
             });
+
+            applyLockState();
         }
 
         // --- Modal & Settings Logic ---
         sunsetOffsetInput.value = globalSunsetOffset;
         sunsetOffsetInput.addEventListener('change', (e) => {
+            if(!isSettingsUnlocked) return;
             let val = parseInt(e.target.value);
             if (isNaN(val)) val = 0;
             globalSunsetOffset = val;
@@ -1655,27 +1750,34 @@
             loadTableData(); 
             renderAnnouncementsUI();
             renderRemindersUI();
+            
+            // תמיד פותח במצב צפייה כדי למנוע טעויות
+            isSettingsUnlocked = false;
+            applyLockState();
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            let timerVal = parseInt(minutesInput.value);
-            if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
-            countdownMinutes = timerVal;
-            localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+            if (isSettingsUnlocked) {
+                let timerVal = parseInt(minutesInput.value);
+                if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
+                countdownMinutes = timerVal;
+                localStorage.setItem('netzCountdownMinutes', countdownMinutes);
 
-            showHaftarah = showHaftarahToggle.checked;
-            localStorage.setItem('showHaftarah', showHaftarah);
+                showHaftarah = showHaftarahToggle.checked;
+                localStorage.setItem('showHaftarah', showHaftarah);
 
-            orefEnabled = orefEnabledToggle.checked;
-            localStorage.setItem('orefEnabled', orefEnabled);
+                orefEnabled = orefEnabledToggle.checked;
+                localStorage.setItem('orefEnabled', orefEnabled);
 
-            orefZones = orefZonesInput.value;
-            localStorage.setItem('orefZones', orefZones);
+                orefZones = orefZonesInput.value;
+                localStorage.setItem('orefZones', orefZones);
 
-            syncToCloud();
+                syncToCloud();
+                updateClock(); 
+            }
             
             modal.classList.add('hidden');
-            updateClock(); 
+            isSettingsUnlocked = false; 
         });
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
@@ -1698,6 +1800,7 @@
 
         // --- Reminders Logic ---
         addReminderBtn.addEventListener('click', () => {
+            if(!isSettingsUnlocked) return;
             const text = newReminderText.value.trim();
             if (!text) return;
             remindersList.push({ id: Date.now().toString(), text, active: true });
@@ -1710,6 +1813,7 @@
             remindersListElWrapper.innerHTML = '';
             if (remindersList.length === 0) {
                 remindersListElWrapper.innerHTML = '<div class="text-gray-500 text-sm">אין תזכורות מוגדרות.</div>';
+                applyLockState();
                 return;
             }
 
@@ -1720,7 +1824,7 @@
                     <div class="flex items-center gap-3">
                         <label class="relative inline-flex items-center cursor-pointer" title="הפעל/כבה תזכורת">
                             <input type="checkbox" class="sr-only peer toggle-reminder-btn" data-id="${rem.id}" ${rem.active ? 'checked' : ''}>
-                            <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500"></div>
+                            <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
                         </label>
                         <span class="text-gray-200 ${rem.active ? 'font-bold text-white' : 'opacity-50'}">${rem.text}</span>
                     </div>
@@ -1734,6 +1838,10 @@
 
             document.querySelectorAll('.toggle-reminder-btn').forEach(btn => {
                 btn.addEventListener('change', (e) => {
+                    if(!isSettingsUnlocked) {
+                        e.target.checked = !e.target.checked; // Revert change visually
+                        return;
+                    }
                     const id = e.target.getAttribute('data-id');
                     const rem = remindersList.find(r => r.id === id);
                     if (rem) rem.active = e.target.checked;
@@ -1744,12 +1852,15 @@
 
             document.querySelectorAll('.delete-reminder-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
+                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     remindersList = remindersList.filter(r => r.id !== id);
                     saveReminders();
                     renderRemindersUI();
                 });
             });
+
+            applyLockState();
         }
 
         function saveReminders() {
