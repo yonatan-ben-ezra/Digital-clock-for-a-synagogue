@@ -110,28 +110,28 @@
     <!-- Pikud HaOref Red Alert Overlay (צבע אדום) -->
     <div id="redAlertOverlay" class="hidden fixed inset-0 z-[100] red-alert-bg backdrop-blur-md flex-col items-center justify-center p-2 md:p-6 text-center transition-opacity duration-300">
         <div class="animate-ping mb-2 flex-shrink-0">
-            <i data-lucide="triangle-alert" class="w-20 h-20 md:w-24 md:h-24 text-white"></i>
+            <i data-lucide="triangle-alert" class="w-16 h-16 md:w-20 md:h-20 text-white"></i>
         </div>
-        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(10vw, 16vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
+        <div id="redAlertTitle" class="text-white font-black leading-tight tracking-widest flex-shrink-0" style="font-size: min(8vw, 12vh); text-shadow: 0 10px 40px rgba(0,0,0,0.8);">
             צבע אדום!
         </div>
-        <div id="redAlertAreas" class="text-white font-bold mt-2 md:mt-3 flex-shrink-0" style="font-size: min(5vw, 7vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
+        <div id="redAlertAreas" class="text-white font-bold mt-1 md:mt-2 flex-shrink-0" style="font-size: min(4vw, 6vh); text-shadow: 0 5px 20px rgba(0,0,0,0.5);">
             <!-- ירושלים דרום -->
         </div>
-        <div class="text-white/95 font-bold mt-3 md:mt-4 text-xl md:text-3xl px-4 flex-shrink-0 bg-black/30 p-3 md:p-4 rounded-xl border border-white/20 whitespace-normal">
-            נא להיכנס מיד למרחב המוגן ולשהות בו 10 דקות
+        <div class="text-white/95 font-bold mt-2 md:mt-3 text-base md:text-2xl px-3 flex-shrink-0 bg-black/30 p-2 md:p-3 rounded-xl border border-white/20 whitespace-normal">
+            יש להיכנס מיד למרחב מוגן ולשהות בו 10 דקות
         </div>
     </div>
 
     <!-- Safe Room Timer Overlay (טיימר 10 דקות) -->
     <div id="safeRoomOverlay" class="hidden fixed inset-0 z-[90] bg-black/50 backdrop-blur-sm flex-col items-center justify-center p-6 text-center transition-opacity duration-500">
         <div class="mb-4">
-            <i data-lucide="shield-check" class="w-20 h-20 md:w-28 md:h-28 text-orange-500 mx-auto"></i>
+            <i data-lucide="shield-check" class="w-16 h-16 md:w-24 md:h-24 text-orange-400 mx-auto"></i>
         </div>
-        <div class="text-orange-400 font-bold text-2xl md:text-4xl mb-4 drop-shadow-lg">
+        <div class="text-white font-bold text-xl md:text-4xl mb-4 drop-shadow-lg">
             יש להישאר במרחב המוגן עד סיום הספירה:
         </div>
-        <div id="safeRoomTimerDisplay" class="text-orange-500 font-black tracking-widest" style="font-size: min(20vw, 30vh); text-shadow: 0 5px 20px rgba(249, 115, 22, 0.5);">
+        <div id="safeRoomTimerDisplay" class="text-orange-400 font-black tracking-widest" style="font-size: min(20vw, 30vh); text-shadow: 0 5px 20px rgba(249, 115, 22, 0.4);">
             10:00
         </div>
     </div>
@@ -224,7 +224,7 @@
                     <div class="flex items-center justify-between mb-4 bg-[#1e1e1e] p-3 rounded-lg border border-gray-700">
                         <div>
                             <div class="text-white font-medium">הצג הפטרה בשבת וחג</div>
-                            <div class="text-xs text-gray-400">יתווסף אוטומטית ביום שבת/חג עד השעה 12:00 בצהריים</div>
+                            <div class="text-xs text-gray-400">יתווסף אוטומטית מתחילת יום השבת/החג (חצות הלילה) ועד השעה 12:00 בצהריים</div>
                         </div>
                         <label class="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" id="showHaftarahToggle" class="sr-only peer">
@@ -691,7 +691,7 @@
             clearTimeout(orefAlertTimeout);
             orefAlertTimeout = setTimeout(() => {
                 hideRedAlert();
-            }, 120000);
+            }, 120000); // מקסימום 2 דקות להתרעה בוהקת
         }
 
         function hideRedAlert() {
@@ -1059,59 +1059,114 @@
             try {
                 const now = new Date();
                 const todayStr = formatDate(now);
+                const isNewDay = (todayStr !== lastFetchedDateString);
+                
+                // איפוס נתוני התאריך ושבת בכל יום חדש.
+                // מונע הצגת תאריך ישן של "אתמול" במקרה שיש כעת הפסקת אינטרנט.
+                if (isNewDay) {
+                    currentHebrewDateStr = "טוען תאריך...";
+                    nextHebrewDateStr = "טוען תאריך...";
+                    currentShabbatCandles = null;
+                    currentShabbatHavdalah = null;
+                    hasShabbatTimes = false;
+                    if (shabbatTimesEl) shabbatTimesEl.innerHTML = '';
+                }
+                
                 lastFetchedDateString = todayStr;
 
-                const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=281184&sec=1&date=${todayStr}`);
-                const zmanimData = await zmanimRes.json();
-                
-                let baseSunrise = new Date(zmanimData.times.sunrise);
-                let baseSunset = new Date(zmanimData.times.sunset);
+                let baseSunrise = null;
+                let baseSunset = null;
 
-                if (globalSunsetOffset) {
-                    baseSunset.setMinutes(baseSunset.getMinutes() + globalSunsetOffset);
-                }
-
-                const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
-                if (customZmanim[todayStr]) {
-                    if (customZmanim[todayStr].sunrise) {
-                        const [h, m, s] = customZmanim[todayStr].sunrise.split(':');
-                        baseSunrise = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
-                    }
-                    if (customZmanim[todayStr].sunset) {
-                        const [h, m, s] = customZmanim[todayStr].sunset.split(':');
-                        baseSunset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
-                    }
-                }
-
-                currentSunriseDate = baseSunrise;
-                currentSunsetDate = baseSunset;
-
-                sunriseTimeEl.innerText = formatTimeHM(currentSunriseDate);
-                sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
-                netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
-
-                const tomorrow = new Date(now);
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = formatDate(tomorrow);
-
-                const [hebDateRes, hebTomorrowRes] = await Promise.all([
-                    fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`),
-                    fetch(`https://www.hebcal.com/converter?cfg=json&date=${tomorrowStr}&g2h=1&strict=1`)
-                ]);
-                
-                const hebDateData = await hebDateRes.json();
-                const hebTomorrowData = await hebTomorrowRes.json();
-                
-                currentHebrewDateStr = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
-                nextHebrewDateStr = hebTomorrowData.hebrew.replace(/[\u0591-\u05C7]/g, '');
-
-                currentOmerDay = getOmerDay(hebDateData.hm, hebDateData.hd);
-                nextOmerDay = getOmerDay(hebTomorrowData.hm, hebTomorrowData.hd);
-
-                gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
-
+                // 1. Fetch Sunrise & Sunset (with Local Cache Fallback logic if internet is down)
                 try {
-                    // Fetching upcoming week's Shabbat info to correctly get upcoming candles/havdalah
+                    const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=281184&sec=1&date=${todayStr}`);
+                    if (!zmanimRes.ok) throw new Error("HTTP Status " + zmanimRes.status);
+                    const zmanimData = await zmanimRes.json();
+                    
+                    baseSunrise = new Date(zmanimData.times.sunrise);
+                    baseSunset = new Date(zmanimData.times.sunset);
+
+                    // Update local cache so it's fresh for next time offline
+                    let cachedZmanim = JSON.parse(localStorage.getItem('baseZmanimCache') || '{}');
+                    cachedZmanim[todayStr] = {
+                        sunrise: zmanimData.times.sunrise,
+                        sunset: zmanimData.times.sunset
+                    };
+                    localStorage.setItem('baseZmanimCache', JSON.stringify(cachedZmanim));
+
+                } catch (zmanimError) {
+                    console.warn("Zmanim network fetch failed, trying to pull from Local Cache...", zmanimError);
+                    let cachedZmanim = JSON.parse(localStorage.getItem('baseZmanimCache') || '{}');
+                    if (cachedZmanim[todayStr]) {
+                        baseSunrise = new Date(cachedZmanim[todayStr].sunrise);
+                        baseSunset = new Date(cachedZmanim[todayStr].sunset);
+                        console.log("Successfully loaded today's Zmanim from cache!");
+                    }
+                }
+
+                // If we successfully got zmanim (either from web or cache)
+                if (baseSunrise && baseSunset) {
+                    if (globalSunsetOffset) {
+                        baseSunset.setMinutes(baseSunset.getMinutes() + globalSunsetOffset);
+                    }
+
+                    const customZmanim = JSON.parse(localStorage.getItem('customZmanim') || '{}');
+                    if (customZmanim[todayStr]) {
+                        if (customZmanim[todayStr].sunrise) {
+                            const [h, m, s] = customZmanim[todayStr].sunrise.split(':');
+                            baseSunrise = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+                        }
+                        if (customZmanim[todayStr].sunset) {
+                            const [h, m, s] = customZmanim[todayStr].sunset.split(':');
+                            baseSunset = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s || 0);
+                        }
+                    }
+
+                    currentSunriseDate = baseSunrise;
+                    currentSunsetDate = baseSunset;
+
+                    sunriseTimeEl.innerText = formatTimeHM(currentSunriseDate);
+                    sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
+                    netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
+                }
+
+                // 2. Fetch Hebrew Date (Try/Catch to protect the whole flow)
+                try {
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = formatDate(tomorrow);
+
+                    const [hebDateRes, hebTomorrowRes] = await Promise.all([
+                        fetch(`https://www.hebcal.com/converter?cfg=json&date=${todayStr}&g2h=1&strict=1`),
+                        fetch(`https://www.hebcal.com/converter?cfg=json&date=${tomorrowStr}&g2h=1&strict=1`)
+                    ]);
+                    
+                    if (hebDateRes.ok && hebTomorrowRes.ok) {
+                        const hebDateData = await hebDateRes.json();
+                        const hebTomorrowData = await hebTomorrowRes.json();
+                        
+                        currentHebrewDateStr = hebDateData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+                        nextHebrewDateStr = hebTomorrowData.hebrew.replace(/[\u0591-\u05C7]/g, '');
+
+                        currentOmerDay = getOmerDay(hebDateData.hm, hebDateData.hd);
+                        nextOmerDay = getOmerDay(hebTomorrowData.hm, hebTomorrowData.hd);
+                    } else {
+                        throw new Error("HTTP error when fetching Hebrew date");
+                    }
+                    
+                    gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+                } catch (hebErr) {
+                    console.warn("Hebrew Date fetch failed.", hebErr);
+                    // אם יום חדש והאינטרנט למטה, אל תשאיר 'טוען תאריך...' לנצח. הודע שיש שגיאה.
+                    if (currentHebrewDateStr === "טוען תאריך...") {
+                        currentHebrewDateStr = "אין אינטרנט (תאריך חסר)";
+                        nextHebrewDateStr = "אין אינטרנט (תאריך חסר)";
+                    }
+                    gregDateEl.innerText = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth() + 1).padStart(2, '0')}/${now.getFullYear()}`;
+                }
+
+                // 3. Fetch Shabbat/Haftarah Data
+                try {
                     const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=281184&leyning=1`);
                     if (shabbatRes.ok) {
                         const shabbatData = await shabbatRes.json();
@@ -1120,7 +1175,7 @@
                         
                         if (shabbatData && shabbatData.items) {
                             for (const item of shabbatData.items) {
-                                // Sefaria API fetch for 2 first words of Haftarah
+                                // Sefaria API fetch for Haftarah (First 2 words)
                                 if (item.leyning && (item.leyning.haftarah_sephardic || item.leyning.haftarah)) {
                                     const haftarahEn = item.leyning.haftarah_sephardic || item.leyning.haftarah;
                                     const cachedHaftarah = localStorage.getItem('haftarah_' + haftarahEn);
@@ -1135,7 +1190,6 @@
                                                 let heText = data.he;
                                                 if (Array.isArray(heText)) heText = heText[0];
                                                 if (heText) {
-                                                    // Strip HTML, Nikkud, Taamim, Punctuation
                                                     const cleanText = heText.replace(/<[^>]*>?/gm, '')
                                                                             .replace(/[\u0591-\u05C7]/g, '')
                                                                             .replace(/־/g, ' ')
@@ -1157,7 +1211,6 @@
 
                                 if (!item.date) continue;
                                 
-                                // Store the next upcoming candles and havdalah
                                 if (item.category === 'candles' && !shabbatCandles) {
                                     shabbatCandles = new Date(item.date);
                                     if (globalSunsetOffset) {
@@ -1172,16 +1225,14 @@
                         currentShabbatCandles = shabbatCandles;
                         currentShabbatHavdalah = shabbatHavdalah;
 
-                        // Check if we should display the Shabbat/Holiday times TODAY
                         let showShabbatTimesToday = false;
                         let html = '';
                         
-                        // בימי שישי/ערבי חג - נציג רק הדלקת נרות. בשבתות/חגים - נציג רק צאת שבת/חג
+                        // פיצול הזמנים: בימי שישי/ערב חג יופיע רק "הדלקת נרות". ביום השבת/חג יופיע רק "צאת".
                         if (shabbatCandles && formatDate(shabbatCandles) === todayStr) {
                             html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
                             showShabbatTimesToday = true;
                         } else if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) {
-                            // בדיקה אם יציאת החג נופלת על יום שבת (6) או יום חול אחר
                             const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
                             html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
                             showShabbatTimesToday = true;
@@ -1197,10 +1248,11 @@
                     }
                 } catch (e) {
                     console.error("Error fetching Shabbat times:", e);
+                    // במקרה שגיאה אין צורך לטפל. הערכים יהיו פשוט נקיים כי הם התאפסו בתחילת היום.
                 }
 
             } catch (err) {
-                console.error("Error fetching data:", err);
+                console.error("Critical error fetching data:", err);
             }
         }
 
@@ -1213,30 +1265,35 @@
             }
 
             const todayStr = formatDate(now);
+            // משיכת נתונים אוטומטית כשהיום מתחלף
             if (todayStr !== lastFetchedDateString) {
                 fetchDatesAndZmanim();
             }
 
             // Update Hebrew Date (13 mins after sunset)
             let activeOmerDay = 0;
-            if (currentHebrewDateStr && currentSunsetDate && nextHebrewDateStr) {
-                const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
-                let dayPrefix = "יום " + hebrewDaysArr[now.getDay()];
+            if (currentHebrewDateStr && currentHebrewDateStr !== "טוען תאריך..." && !currentHebrewDateStr.includes("אין אינטרנט")) {
                 let displayHebrewDate = currentHebrewDateStr;
+                let dayPrefix = "יום " + hebrewDaysArr[now.getDay()];
                 activeOmerDay = currentOmerDay;
                 
-                if (now.getTime() >= sunsetPlus13.getTime()) {
-                    if (now.getDay() === 5) {
-                        dayPrefix = "ליל שבת";
-                    } else {
-                        const nextDayIndex = (now.getDay() + 1) % 7;
-                        dayPrefix = "אור ל" + hebrewDaysArr[nextDayIndex];
+                if (currentSunsetDate && nextHebrewDateStr) {
+                    const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
+                    if (now.getTime() >= sunsetPlus13.getTime()) {
+                        if (now.getDay() === 5) {
+                            dayPrefix = "ליל שבת";
+                        } else {
+                            const nextDayIndex = (now.getDay() + 1) % 7;
+                            dayPrefix = "אור ל" + hebrewDaysArr[nextDayIndex];
+                        }
+                        displayHebrewDate = nextHebrewDateStr;
+                        activeOmerDay = nextOmerDay;
                     }
-                    displayHebrewDate = nextHebrewDateStr;
-                    activeOmerDay = nextOmerDay;
                 }
-                
                 hebrewDateEl.innerText = `${dayPrefix}, ${displayHebrewDate}`;
+            } else {
+                // If there's an error or it's still loading, show exactly what's inside the variable.
+                hebrewDateEl.innerText = currentHebrewDateStr || "טוען...";
             }
 
             // -- Check Smart Announcements --
@@ -1338,9 +1395,9 @@
 
             // -- Haftarah Display Logic --
             let isHaftarahTime = false;
+            // ההפטרה תוצג רק ביום השבת/חג עצמו (מחצות הלילה ועד 12:00 בצהריים)
             if (currentShabbatHavdalah) {
                 const havdalahDateStr = formatDate(currentShabbatHavdalah);
-                // מוצג רק ביום השבת/חג עצמו (יום יציאת השבת/חג) ורק עד השעה 12:00 בצהריים
                 if (todayStr === havdalahDateStr && now.getHours() < 12) {
                     isHaftarahTime = true;
                 }
