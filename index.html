@@ -554,7 +554,7 @@
                     reminders: remindersList, 
                     customZmanim: customZmanim,
                     lastUpdated: new Date().toISOString()
-                }, { merge: true });
+                });
             } catch (e) {
                 console.error("Cloud Save Error:", e);
             }
@@ -1214,7 +1214,7 @@
                     currentSunsetDate = baseSunset;
 
                     sunriseTimeEl.innerText = formatTimeHM(currentSunriseDate);
-                    sunsetTimeEl.innerText = formatTimeHM(currentSunsetDate);
+                    sunsetTimeEl.innerText = formatTimeHMRounded(currentSunsetDate);
                     netzTimeDisplayEl.innerText = formatTimeHMS(currentSunriseDate);
                 }
 
@@ -1561,6 +1561,13 @@
         function formatTimeHM(dateObj) {
             return String(dateObj.getHours()).padStart(2, '0') + ":" + 
                    String(dateObj.getMinutes()).padStart(2, '0');
+        }
+
+        function formatTimeHMRounded(dateObj) {
+            let d = new Date(dateObj.getTime());
+            d.setSeconds(d.getSeconds() + 30); 
+            return String(d.getHours()).padStart(2, '0') + ":" + 
+                   String(d.getMinutes()).padStart(2, '0');
         }
 
         function formatDiffToHMS(ms) {
