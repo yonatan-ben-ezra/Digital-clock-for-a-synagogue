@@ -1297,13 +1297,18 @@
 
                                 if (!item.date) continue;
                                 
-                                if (item.category === 'candles' && !shabbatCandles) {
-                                    shabbatCandles = new Date(item.date);
-                                    if (globalSunsetOffset) {
-                                        shabbatCandles.setMinutes(shabbatCandles.getMinutes() + globalSunsetOffset);
+                                const itemDateStr = item.date.substring(0, 10);
+                                if (item.category === 'candles' || (item.title && item.title.includes('Candle lighting'))) {
+                                    if (!shabbatCandles || itemDateStr === todayStr) {
+                                        shabbatCandles = new Date(item.date);
+                                        if (globalSunsetOffset) {
+                                            shabbatCandles.setMinutes(shabbatCandles.getMinutes() + globalSunsetOffset);
+                                        }
                                     }
-                                } else if (item.category === 'havdalah' && !shabbatHavdalah) {
-                                    shabbatHavdalah = new Date(item.date);
+                                } else if (item.category === 'havdalah' || (item.title && item.title.includes('Havdalah'))) {
+                                    if (!shabbatHavdalah || itemDateStr === todayStr) {
+                                        shabbatHavdalah = new Date(item.date);
+                                    }
                                 }
                             }
                         }
@@ -1316,10 +1321,10 @@
                         
                         const curDay = now.getDay();
                         
-                        if (shabbatCandles && (curDay === 5 || formatDate(shabbatCandles) === todayStr)) {
+                        if (shabbatCandles && (curDay === 5 || formatDate(shabbatCandles) === todayStr) && now.getTime() < shabbatCandles.getTime() + (60 * 60000)) {
                             html += `<div>הדלקת נרות: <span>${formatTimeHM(shabbatCandles)}</span></div>`;
                             showShabbatTimesToday = true;
-                        } else if (shabbatHavdalah && (curDay === 6 || formatDate(shabbatHavdalah) === todayStr)) {
+                        } else if (shabbatHavdalah && formatDate(shabbatHavdalah) === todayStr) {
                             const outText = shabbatHavdalah.getDay() === 6 ? "צאת השבת" : "צאת החג";
                             html += `<div>${outText}: <span>${formatTimeHM(shabbatHavdalah)}</span></div>`;
                             showShabbatTimesToday = true;
