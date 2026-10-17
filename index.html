@@ -177,6 +177,10 @@
             <div id="zmanimCountdown" class="hidden flex-row justify-center items-center zmanim-text">
                 <div class="sunrise-color">הנץ החמה: <span id="netzTimeDisplay">--:--:--</span></div>
             </div>
+
+            <div id="tzeitCountdown" class="hidden flex-row justify-center items-center zmanim-text whitespace-nowrap">
+                <div class="sunset-color">צאת הכוכבים: <span id="tzeitTimeDisplay">--:--</span>&nbsp;&nbsp;בעוד - <span id="tzeitTimerDisplay" class="countdown-color">--:--</span></div>
+            </div>
         </div>
 
         <!-- ROW 2: REMINDERS -->
@@ -220,6 +224,17 @@
                         class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-3 outline-none focus:border-blue-500 transition-colors"
                         placeholder="הכנס דקות (לדוגמה 30)">
                     <p class="text-sm text-gray-500 mt-2">הזן 0 כדי לבטל את הטיימר.</p>
+                </div>
+
+                <!-- Tzeit HaKochavim Settings -->
+                <div class="mb-6 bg-[#2a2a2a] p-4 rounded-xl border border-gray-700">
+                    <label for="tzeitMinutesInput" class="block text-gray-300 mb-2 font-medium">
+                        כמה דקות לאחר השקיעה מוגדר צאת הכוכבים?
+                    </label>
+                    <input type="number" id="tzeitMinutesInput" min="0" max="120" 
+                        class="w-full bg-[#1e1e1e] text-white border border-gray-600 rounded-lg p-3 outline-none focus:border-blue-500 transition-colors"
+                        placeholder="הכנס דקות (לדוגמה 13)">
+                    <p class="text-sm text-gray-500 mt-2">לפי זמן זה יוצג טיימר צאת הכוכבים ויתחלף התאריך העברי.</p>
                 </div>
 
                 <!-- Reminders Settings -->
@@ -471,6 +486,14 @@
                         localStorage.setItem('netzCountdownMinutes', countdownMinutes);
                         needsRefresh = true;
                     }
+                    if (data.tzeitMinutes !== undefined && data.tzeitMinutes !== tzeitMinutes) {
+                        tzeitMinutes = data.tzeitMinutes;
+                        localStorage.setItem('tzeitOffsetMinutes', tzeitMinutes);
+                        if (document.getElementById('tzeitMinutesInput')) {
+                            document.getElementById('tzeitMinutesInput').value = tzeitMinutes;
+                        }
+                        needsRefresh = true;
+                    }
                     if (data.globalSunsetOffset !== undefined && data.globalSunsetOffset !== globalSunsetOffset) {
                         globalSunsetOffset = data.globalSunsetOffset;
                         localStorage.setItem('sunsetOffsetMinutes', globalSunsetOffset);
@@ -546,6 +569,7 @@
             try {
                 await setDoc(docRef, {
                     countdownMinutes: countdownMinutes,
+                    tzeitMinutes: tzeitMinutes,
                     globalSunsetOffset: globalSunsetOffset,
                     showHaftarah: showHaftarah,
                     orefEnabled: orefEnabled,
@@ -569,6 +593,7 @@
         let nextOmerDay = 0;
         
         let countdownMinutes = parseInt(localStorage.getItem('netzCountdownMinutes')) || 0;
+        let tzeitMinutes = localStorage.getItem('tzeitOffsetMinutes') !== null ? parseInt(localStorage.getItem('tzeitOffsetMinutes')) : 13;
         let globalSunsetOffset = parseInt(localStorage.getItem('sunsetOffsetMinutes')) || 0;
         
         // Pikud HaOref Variables
@@ -604,6 +629,9 @@
         const zmanimNormalEl = document.getElementById('zmanimNormal');
         const zmanimCountdownEl = document.getElementById('zmanimCountdown');
         const netzTimeDisplayEl = document.getElementById('netzTimeDisplay');
+        const tzeitCountdownEl = document.getElementById('tzeitCountdown');
+        const tzeitTimeDisplayEl = document.getElementById('tzeitTimeDisplay');
+        const tzeitTimerDisplayEl = document.getElementById('tzeitTimerDisplay');
         const shabbatTimesEl = document.getElementById('shabbatTimes');
         const zmanimRemindersEl = document.getElementById('zmanimReminders');
 
@@ -612,6 +640,7 @@
 
         const modal = document.getElementById('settingsModal');
         const minutesInput = document.getElementById('minutesInput');
+        const tzeitMinutesInput = document.getElementById('tzeitMinutesInput');
         const sunsetOffsetInput = document.getElementById('sunsetOffsetInput');
         
         // Oref Settings Elements
@@ -1367,8 +1396,8 @@
                 activeOmerDay = currentOmerDay;
                 
                 if (currentSunsetDate && nextHebrewDateStr) {
-                    const sunsetPlus13 = new Date(currentSunsetDate.getTime() + 13 * 60000);
-                    if (now.getTime() >= sunsetPlus13.getTime()) {
+                    const tzeitDateForHebrew = new Date(currentSunsetDate.getTime() + tzeitMinutes * 60000);
+                    if (now.getTime() >= tzeitDateForHebrew.getTime()) {
                         if (now.getDay() === 5) {
                             dayPrefix = "ליל שבת";
                         } else {
@@ -1438,6 +1467,22 @@
                 }
             }
 
+            // -- Countdown to Tzeit HaKochavim (5 minutes after sunset until 1 minute after Tzeit) --
+            let isTzeitCountdownActive = false;
+            let tzeitDiffMs = 0;
+            let tzeitDateObj = null;
+
+            if (currentSunsetDate) {
+                tzeitDateObj = new Date(currentSunsetDate.getTime() + tzeitMinutes * 60000);
+                const sunsetPlus5 = new Date(currentSunsetDate.getTime() + 5 * 60000);
+                const tzeitPlus1Min = new Date(tzeitDateObj.getTime() + 60000);
+
+                if (now.getTime() >= sunsetPlus5.getTime() && now.getTime() < tzeitPlus1Min.getTime()) {
+                    isTzeitCountdownActive = true;
+                    tzeitDiffMs = tzeitDateObj.getTime() - now.getTime();
+                }
+            }
+
             if (isCountdownActive) {
                 if (diffSeconds <= 0 && diffSeconds > -10) {
                     clockEl.innerText = "00:00";
@@ -1453,6 +1498,8 @@
                 zmanimNormalEl.classList.remove('flex');
                 shabbatTimesEl.classList.add('hidden');
                 shabbatTimesEl.classList.remove('flex');
+                tzeitCountdownEl.classList.add('hidden');
+                tzeitCountdownEl.classList.remove('flex');
                 zmanimCountdownEl.classList.remove('hidden');
                 zmanimCountdownEl.classList.add('flex');
             } else {
@@ -1461,23 +1508,42 @@
                 zmanimCountdownEl.classList.add('hidden');
                 zmanimCountdownEl.classList.remove('flex');
                 
-                let availableTimesSlides = ['normal'];
-                if (hasShabbatTimes) availableTimesSlides.push('shabbat');
-                
-                const slideDuration = 6; 
-                const currentTimesIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableTimesSlides.length;
+                if (isTzeitCountdownActive && tzeitDateObj) {
+                    tzeitTimeDisplayEl.innerText = formatTimeHM(tzeitDateObj);
+                    if (tzeitDiffMs <= 0) {
+                        tzeitTimerDisplayEl.innerText = "00:00";
+                    } else {
+                        tzeitTimerDisplayEl.innerText = formatDiffToHMS(tzeitDiffMs);
+                    }
 
-                zmanimNormalEl.classList.add('hidden');
-                zmanimNormalEl.classList.remove('flex');
-                shabbatTimesEl.classList.add('hidden');
-                shabbatTimesEl.classList.remove('flex');
-
-                if (availableTimesSlides[currentTimesIndex] === 'normal') {
-                    zmanimNormalEl.classList.remove('hidden');
-                    zmanimNormalEl.classList.add('flex');
+                    zmanimNormalEl.classList.add('hidden');
+                    zmanimNormalEl.classList.remove('flex');
+                    shabbatTimesEl.classList.add('hidden');
+                    shabbatTimesEl.classList.remove('flex');
+                    tzeitCountdownEl.classList.remove('hidden');
+                    tzeitCountdownEl.classList.add('flex');
                 } else {
-                    shabbatTimesEl.classList.remove('hidden');
-                    shabbatTimesEl.classList.add('flex');
+                    tzeitCountdownEl.classList.add('hidden');
+                    tzeitCountdownEl.classList.remove('flex');
+
+                    let availableTimesSlides = ['normal'];
+                    if (hasShabbatTimes) availableTimesSlides.push('shabbat');
+                    
+                    const slideDuration = 6; 
+                    const currentTimesIndex = Math.floor((now.getTime() / 1000) / slideDuration) % availableTimesSlides.length;
+
+                    zmanimNormalEl.classList.add('hidden');
+                    zmanimNormalEl.classList.remove('flex');
+                    shabbatTimesEl.classList.add('hidden');
+                    shabbatTimesEl.classList.remove('flex');
+
+                    if (availableTimesSlides[currentTimesIndex] === 'normal') {
+                        zmanimNormalEl.classList.remove('hidden');
+                        zmanimNormalEl.classList.add('flex');
+                    } else {
+                        shabbatTimesEl.classList.remove('hidden');
+                        shabbatTimesEl.classList.add('flex');
+                    }
                 }
             }
 
@@ -1754,6 +1820,7 @@
 
         document.getElementById('openSettingsBtn').addEventListener('click', () => {
             minutesInput.value = countdownMinutes;
+            tzeitMinutesInput.value = tzeitMinutes;
             showHaftarahToggle.checked = showHaftarah;
             orefEnabledToggle.checked = orefEnabled;
             orefZonesInput.value = orefZones;
@@ -1774,6 +1841,11 @@
                 if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
                 countdownMinutes = timerVal;
                 localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+
+                let tzeitVal = parseInt(tzeitMinutesInput.value);
+                if (isNaN(tzeitVal) || tzeitVal < 0) tzeitVal = 0;
+                tzeitMinutes = tzeitVal;
+                localStorage.setItem('tzeitOffsetMinutes', tzeitMinutes);
 
                 showHaftarah = showHaftarahToggle.checked;
                 localStorage.setItem('showHaftarah', showHaftarah);
