@@ -209,10 +209,6 @@
                 <h2 class="text-2xl font-bold text-white flex items-center gap-2">
                     <i data-lucide="settings" class="w-6 h-6"></i> הגדרות
                 </h2>
-                <button id="unlockSettingsBtn" class="bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-400 px-3 py-1.5 rounded-lg flex items-center gap-2 text-sm transition-colors shadow-md">
-                    <i data-lucide="lock" class="w-4 h-4" id="lockIcon"></i>
-                    <span id="lockText">מצב צפייה (לחץ לפתיחה)</span>
-                </button>
             </div>
             
             <div class="overflow-y-auto custom-scrollbar flex-grow pr-2">
@@ -407,8 +403,8 @@
             </div>
 
             <div class="flex justify-end gap-3 mt-6 flex-shrink-0">
-                <button id="closeSettingsBtn" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors font-medium text-lg">
-                    סגור
+                <button id="closeSettingsBtn" class="px-6 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white transition-colors font-medium text-lg">
+                    סגור ושמור
                 </button>
             </div>
         </div>
@@ -427,10 +423,6 @@
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         lucide.createIcons();
-
-        // --- Settings Password Lock ---
-        const ADMIN_PASSWORD = "5516"; // <<< תשנה את הסיסמה שלך כאן <<<
-        let isSettingsUnlocked = false;
 
         // --- Firebase Cloud Sync Setup ---
         const firebaseConfig = {
@@ -671,79 +663,7 @@
         const addReminderBtn = document.getElementById('addReminderBtn');
         const remindersListElWrapper = document.getElementById('remindersListEl');
 
-        const unlockSettingsBtn = document.getElementById('unlockSettingsBtn');
-
         const hebrewDaysArr = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-
-        // --- Apply Lock State Function ---
-        function applyLockState() {
-            const lockIcon = document.getElementById('lockIcon');
-            const lockText = document.getElementById('lockText');
-            const closeBtn = document.getElementById('closeSettingsBtn');
-
-            // Select all inputs except the unlock button itself
-            const inputsToLock = document.querySelectorAll('#settingsModal input, #settingsModal select');
-            const actionBtns = document.querySelectorAll('#addReminderBtn, #addAnnBtn, #testOrefAlertBtn, .delete-reminder-btn, .edit-ann-btn, .delete-ann-btn, .undo-btn');
-
-            if (isSettingsUnlocked) {
-                lockIcon.setAttribute('data-lucide', 'unlock');
-                lockText.innerText = 'מצב עריכה פתוח (נעל)';
-                unlockSettingsBtn.classList.remove('text-gray-400');
-                unlockSettingsBtn.classList.add('text-green-400');
-                
-                closeBtn.innerText = 'סגור ושמור';
-                closeBtn.classList.replace('bg-gray-600', 'bg-blue-600');
-                closeBtn.classList.replace('hover:bg-gray-500', 'hover:bg-blue-500');
-
-                inputsToLock.forEach(el => {
-                    el.disabled = false;
-                    el.classList.remove('opacity-50', 'cursor-not-allowed');
-                });
-                actionBtns.forEach(el => {
-                    el.disabled = false;
-                    el.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-                });
-            } else {
-                lockIcon.setAttribute('data-lucide', 'lock');
-                lockText.innerText = 'מצב צפייה (לחץ לפתיחה)';
-                unlockSettingsBtn.classList.add('text-gray-400');
-                unlockSettingsBtn.classList.remove('text-green-400');
-                
-                closeBtn.innerText = 'סגור';
-                closeBtn.classList.replace('bg-blue-600', 'bg-gray-600');
-                closeBtn.classList.replace('hover:bg-blue-500', 'hover:bg-gray-500');
-
-                inputsToLock.forEach(el => {
-                    el.disabled = true;
-                    if(el.type !== 'checkbox' && el.type !== 'radio') {
-                        el.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                });
-                actionBtns.forEach(el => {
-                    el.disabled = true;
-                    el.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
-                });
-            }
-            lucide.createIcons();
-        }
-
-        unlockSettingsBtn.addEventListener('click', () => {
-            if (isSettingsUnlocked) {
-                isSettingsUnlocked = false;
-                applyLockState();
-                showToast("ההגדרות ננעלו (מצב צפייה)");
-            } else {
-                const pass = prompt("הכנס סיסמה לעריכת ההגדרות:");
-                if (pass === ADMIN_PASSWORD) {
-                    isSettingsUnlocked = true;
-                    applyLockState();
-                    showToast("ההגדרות נפתחו לעריכה בהצלחה!");
-                } else if (pass !== null) {
-                    alert("סיסמה שגויה. נשאר במצב צפייה.");
-                }
-            }
-        });
-
 
         setInterval(pollOref, 2000); 
 
@@ -824,7 +744,6 @@
         
         if (testOrefAlertBtn) {
             testOrefAlertBtn.addEventListener('click', () => {
-                if(!isSettingsUnlocked) return;
                 isTestingAlert = true;
                 showRedAlert(['ירושלים דרום (הדגמה)'], "ירי רקטות וטילים (הדגמה)");
                 setTimeout(() => {
@@ -917,13 +836,11 @@
             addAnnBtn.className = "bg-yellow-600 hover:bg-yellow-500 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2";
             cancelEditAnnBtn.classList.add('hidden');
             lucide.createIcons();
-            applyLockState();
         }
 
         cancelEditAnnBtn.addEventListener('click', resetAnnForm);
 
         addAnnBtn.addEventListener('click', () => {
-            if(!isSettingsUnlocked) return;
             const text = document.getElementById('newAnnText').value.trim();
             const time = document.getElementById('newAnnTime').value;
             const duration = parseInt(document.getElementById('newAnnDuration').value);
@@ -994,7 +911,6 @@
             announcementsListEl.innerHTML = '';
             if(announcementsList.length === 0) {
                 announcementsListEl.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">אין הודעות מתוזמנות במערכת.</div>';
-                applyLockState();
                 return;
             }
 
@@ -1044,7 +960,6 @@
 
             document.querySelectorAll('.edit-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     const ann = announcementsList.find(a => a.id === id);
                     if (ann) {
@@ -1087,7 +1002,6 @@
 
             document.querySelectorAll('.delete-ann-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     announcementsList = announcementsList.filter(a => a.id !== id);
                     if (editingAnnId === id) resetAnnForm();
@@ -1095,8 +1009,6 @@
                     renderAnnouncementsUI();
                 });
             });
-
-            applyLockState();
         }
 
         function saveAnnouncementsLocalAndCloud() {
@@ -1469,7 +1381,7 @@
                 }
             }
 
-            // -- Countdown to Tzeit HaKochavim (5 minutes after sunset until 1 minute after Tzeit) --
+            // -- Countdown to Tzeit HaKochavim (5 minutes after sunset until 3 minutes after Tzeit) --
             let isTzeitCountdownActive = false;
             let tzeitDiffMs = 0;
             let tzeitDateObj = null;
@@ -1477,9 +1389,9 @@
             if (currentSunsetDate) {
                 tzeitDateObj = new Date(currentSunsetDate.getTime() + tzeitMinutes * 60000);
                 const sunsetPlus5 = new Date(currentSunsetDate.getTime() + 5 * 60000);
-                const tzeitPlus1Min = new Date(tzeitDateObj.getTime() + 60000);
+                const tzeitPlus3Min = new Date(tzeitDateObj.getTime() + 3 * 60000);
 
-                if (now.getTime() >= sunsetPlus5.getTime() && now.getTime() < tzeitPlus1Min.getTime()) {
+                if (now.getTime() >= sunsetPlus5.getTime() && now.getTime() < tzeitPlus3Min.getTime()) {
                     isTzeitCountdownActive = true;
                     tzeitDiffMs = tzeitDateObj.getTime() - now.getTime();
                 }
@@ -1514,8 +1426,10 @@
                     tzeitTimeDisplayEl.innerText = formatTimeHM(tzeitDateObj);
                     if (tzeitDiffMs <= 0) {
                         tzeitTimerDisplayEl.innerText = "00:00";
+                        tzeitTimerDisplayEl.classList.add('blink');
                     } else {
                         tzeitTimerDisplayEl.innerText = formatDiffToHMS(tzeitDiffMs);
+                        tzeitTimerDisplayEl.classList.remove('blink');
                     }
 
                     zmanimNormalEl.classList.add('hidden');
@@ -1527,6 +1441,9 @@
                 } else {
                     tzeitCountdownEl.classList.add('hidden');
                     tzeitCountdownEl.classList.remove('flex');
+                    if (tzeitTimerDisplayEl) {
+                        tzeitTimerDisplayEl.classList.remove('blink');
+                    }
 
                     let availableTimesSlides = ['normal'];
                     if (hasShabbatTimes) availableTimesSlides.push('shabbat');
@@ -1755,7 +1672,6 @@
 
             tableBody.querySelectorAll('input[type="time"]').forEach(input => {
                 input.addEventListener('change', (e) => {
-                    if(!isSettingsUnlocked) return;
                     const dateStr = e.target.getAttribute('data-date');
                     const type = e.target.getAttribute('data-type');
                     const val = e.target.value;
@@ -1784,7 +1700,6 @@
 
             tableBody.querySelectorAll('.undo-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    if(!isSettingsUnlocked) return;
                     const button = e.currentTarget;
                     const dateStr = button.getAttribute('data-date');
                     const type = button.getAttribute('data-type');
@@ -1802,14 +1717,11 @@
                     }
                 });
             });
-
-            applyLockState();
         }
 
         // --- Modal & Settings Logic ---
         sunsetOffsetInput.value = globalSunsetOffset;
         sunsetOffsetInput.addEventListener('change', (e) => {
-            if(!isSettingsUnlocked) return;
             let val = parseInt(e.target.value);
             if (isNaN(val)) val = 0;
             globalSunsetOffset = val;
@@ -1831,39 +1743,32 @@
             loadTableData(); 
             renderAnnouncementsUI();
             renderRemindersUI();
-            
-            // תמיד פותח במצב צפייה כדי למנוע טעויות
-            isSettingsUnlocked = false;
-            applyLockState();
         });
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            if (isSettingsUnlocked) {
-                let timerVal = parseInt(minutesInput.value);
-                if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
-                countdownMinutes = timerVal;
-                localStorage.setItem('netzCountdownMinutes', countdownMinutes);
+            let timerVal = parseInt(minutesInput.value);
+            if (isNaN(timerVal) || timerVal < 0) timerVal = 0;
+            countdownMinutes = timerVal;
+            localStorage.setItem('netzCountdownMinutes', countdownMinutes);
 
-                let tzeitVal = parseInt(tzeitMinutesInput.value);
-                if (isNaN(tzeitVal) || tzeitVal < 0) tzeitVal = 0;
-                tzeitMinutes = tzeitVal;
-                localStorage.setItem('tzeitOffsetMinutes', tzeitMinutes);
+            let tzeitVal = parseInt(tzeitMinutesInput.value);
+            if (isNaN(tzeitVal) || tzeitVal < 0) tzeitVal = 0;
+            tzeitMinutes = tzeitVal;
+            localStorage.setItem('tzeitOffsetMinutes', tzeitMinutes);
 
-                showHaftarah = showHaftarahToggle.checked;
-                localStorage.setItem('showHaftarah', showHaftarah);
+            showHaftarah = showHaftarahToggle.checked;
+            localStorage.setItem('showHaftarah', showHaftarah);
 
-                orefEnabled = orefEnabledToggle.checked;
-                localStorage.setItem('orefEnabled', orefEnabled);
+            orefEnabled = orefEnabledToggle.checked;
+            localStorage.setItem('orefEnabled', orefEnabled);
 
-                orefZones = orefZonesInput.value;
-                localStorage.setItem('orefZones', orefZones);
+            orefZones = orefZonesInput.value;
+            localStorage.setItem('orefZones', orefZones);
 
-                syncToCloud();
-                updateClock(); 
-            }
+            syncToCloud();
+            updateClock(); 
             
             modal.classList.add('hidden');
-            isSettingsUnlocked = false; 
         });
 
         document.getElementById('refreshBtn').addEventListener('click', () => {
@@ -1886,7 +1791,6 @@
 
         // --- Reminders Logic ---
         addReminderBtn.addEventListener('click', () => {
-            if(!isSettingsUnlocked) return;
             const text = newReminderText.value.trim();
             if (!text) return;
             remindersList.push({ id: Date.now().toString(), text, active: true });
@@ -1899,7 +1803,6 @@
             remindersListElWrapper.innerHTML = '';
             if (remindersList.length === 0) {
                 remindersListElWrapper.innerHTML = '<div class="text-gray-500 text-sm">אין תזכורות מוגדרות.</div>';
-                applyLockState();
                 return;
             }
 
@@ -1924,10 +1827,6 @@
 
             document.querySelectorAll('.toggle-reminder-btn').forEach(btn => {
                 btn.addEventListener('change', (e) => {
-                    if(!isSettingsUnlocked) {
-                        e.target.checked = !e.target.checked; // Revert change visually
-                        return;
-                    }
                     const id = e.target.getAttribute('data-id');
                     const rem = remindersList.find(r => r.id === id);
                     if (rem) rem.active = e.target.checked;
@@ -1938,15 +1837,12 @@
 
             document.querySelectorAll('.delete-reminder-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
-                    if(!isSettingsUnlocked) return;
                     const id = e.currentTarget.getAttribute('data-id');
                     remindersList = remindersList.filter(r => r.id !== id);
                     saveReminders();
                     renderRemindersUI();
                 });
             });
-
-            applyLockState();
         }
 
         function saveReminders() {
